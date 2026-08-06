@@ -6,6 +6,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using Doc2MD.Models;
+using Doc2MD.Pipeline.Services;
 using Doc2MD.Services;
 using Microsoft.Win32;
 
@@ -916,14 +917,21 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 await RunFormattingAsync(file, outputDirectory, cancellationToken);
                 break;
             case AppMode.MarkdownToDocx:
-                await _conversionService.ConvertFileAsync(
-                    file,
-                    outputDirectory,
-                    Settings.Conversion.PreserveFolderStructure,
-                    inputRoot,
-                    ConversionTarget.OfficialDocx,
-                    Settings.Preview.MarkdownToDocx,
-                    cancellationToken);
+                if (Settings.Preview.MarkdownToDocx.UsePipelineEngine)
+                {
+                    await RunPipelineMd2DocxAsync(file, outputDirectory, cancellationToken);
+                }
+                else
+                {
+                    await _conversionService.ConvertFileAsync(
+                        file,
+                        outputDirectory,
+                        Settings.Conversion.PreserveFolderStructure,
+                        inputRoot,
+                        ConversionTarget.OfficialDocx,
+                        Settings.Preview.MarkdownToDocx,
+                        cancellationToken);
+                }
                 break;
             default:
                 await _conversionService.ConvertFileAsync(
@@ -970,6 +978,52 @@ public sealed class MainViewModel : INotifyPropertyChanged
             file.Status = FileStatus.Failed;
             file.ErrorMessage = ex.Message;
             LoggingService.Error($"[Formatting] 异常: {file.FullPath}", ex);
+        }
+    }
+
+    private async Task RunPipelineMd2DocxAsync(FileItem file, string outputDirectory, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var templateId = Settings.Preview.MarkdownToDocx.PipelineTemplateId;
+            if (string.IsNullOrWhiteSpace(templateId))
+                templateId = "official-report";
+
+            var converter = new MarkdownToDocxConverter();
+            Directory.CreateDirectory(outputDirectory);
+
+            var outputPath = Path.Combine(outputDirectory,
+                Path.GetFileNameWithoutExtension(file.FullPath) + ".docx");
+
+            var result = await Task.Run(
+                () => converter.Convert(file.FullPath, outputPath, templateId),
+                cancellationToken);
+
+            if (result.Success)
+            {
+                file.Status = FileStatus.Done;
+                file.ErrorMessage = null;
+                file.OutputPath = result.OutputPath;
+                LoggingService.Info($"[Pipeline md2docx] 完成: {file.FullPath} -> {result.OutputPath}");
+            }
+            else
+            {
+                file.Status = FileStatus.Failed;
+                file.ErrorMessage = result.ErrorMessage;
+                LoggingService.Warning($"[Pipeline md2docx] 失败: {file.FullPath} - {result.ErrorMessage}");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            file.Status = FileStatus.Pending;
+            file.ErrorMessage = null;
+            throw;
+        }
+        catch (Exception ex)
+        {
+            file.Status = FileStatus.Failed;
+            file.ErrorMessage = ex.Message;
+            LoggingService.Error($"[Pipeline md2docx] 异常: {file.FullPath}", ex);
         }
     }
 

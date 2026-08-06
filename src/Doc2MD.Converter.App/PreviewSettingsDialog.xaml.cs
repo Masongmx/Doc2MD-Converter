@@ -1,5 +1,6 @@
 using System.Windows;
 using Doc2MD.Models;
+using Doc2MD.Pipeline.Services;
 using Doc2MD.Services;
 using Doc2MD.ViewModels;
 using Microsoft.Win32;
@@ -17,6 +18,38 @@ public partial class PreviewSettingsDialog : Window
     }
 
     // === MarkdownToDocx 方案操作 ===
+
+    private void ApplyPipelineTemplate_Click(object sender, RoutedEventArgs e)
+    {
+        var templateId = ViewModel.Settings.Preview.MarkdownToDocx.PipelineTemplateId;
+        var templateService = new TemplateService();
+        var template = templateService.GetTemplate(templateId);
+        var opts = template.Options;
+
+        // 将 Pipeline 模板参数填充到 UI 设置字段
+        var settings = ViewModel.Settings.Preview.MarkdownToDocx;
+        settings.TitleFont = opts.TitleFont;
+        settings.HeadingFont = opts.Heading1Font;
+        settings.BodyFont = opts.BodyFont;
+        settings.SubheadingFont = opts.Heading2Font;
+        settings.CodeBlockFont = "Consolas";
+        settings.TitleFontSizePt = opts.TitleFontSizePt;
+        settings.HeadingFontSizePt = opts.Heading1FontSizePt;
+        settings.SubheadingFontSizePt = opts.Heading2FontSizePt;
+        settings.BodyFontSizePt = opts.BodyFontSizePt;
+        settings.CodeBlockFontSizePt = 10.5;
+        settings.LineSpacingPt = opts.LineSpacingPt;
+        settings.FirstLineIndentChars = opts.FirstLineIndentChars;
+        settings.BeforeSpacingPt = opts.BeforeSpacingPt;
+        settings.AfterSpacingPt = opts.AfterSpacingPt;
+        settings.PageMarginTopCm = opts.PageMarginTopCm;
+        settings.PageMarginBottomCm = opts.PageMarginBottomCm;
+        settings.PageMarginLeftCm = opts.PageMarginLeftCm;
+        settings.PageMarginRightCm = opts.PageMarginRightCm;
+
+        ViewModel.NotifySettingsChanged();
+        MessageBox.Show($"已应用模板: {template.Name}\n{template.Metadata.Description}", "模板已应用", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
 
     private void ApplyProfile_Click_md2docx(object sender, RoutedEventArgs e)
     {

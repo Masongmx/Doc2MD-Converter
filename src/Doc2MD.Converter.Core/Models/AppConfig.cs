@@ -102,6 +102,12 @@ public class MarkdownToDocxPreviewSettings
     public double PageMarginLeftCm { get; set; } = 2.8;
     public double PageMarginRightCm { get; set; } = 2.6;
     public string FormatScheme { get; set; } = "标准公文格式";
+
+    /// <summary>Pipeline 排版引擎模板 ID（official-report / meeting-minutes / inspection-report）</summary>
+    public string PipelineTemplateId { get; set; } = "official-report";
+
+    /// <summary>是否使用 Pipeline 引擎（默认开启，替代 Legacy MarkdownToDocxParser）</summary>
+    public bool UsePipelineEngine { get; set; } = true;
 }
 
 public class DocumentToMarkdownPreviewSettings
