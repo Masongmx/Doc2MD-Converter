@@ -51,55 +51,6 @@ public partial class PreviewSettingsDialog : Window
         MessageBox.Show($"已应用模板: {template.Name}\n{template.Metadata.Description}", "模板已应用", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
-    private void ApplyProfile_Click_md2docx(object sender, RoutedEventArgs e)
-    {
-        var schemeName = ViewModel.Settings.Preview.MarkdownToDocx.FormatScheme;
-        var profile = FormattingProfile.GetBuiltIn(schemeName);
-        FormattingProfileService.ApplyTo(profile, ViewModel.Settings.Preview.MarkdownToDocx);
-        ViewModel.NotifySettingsChanged();
-    }
-
-    private void ExportProfile_Click_md2docx(object sender, RoutedEventArgs e)
-    {
-        var dialog = new SaveFileDialog
-        {
-            Filter = "排版方案文件|*.doc2md-profile.json",
-            DefaultExt = ".doc2md-profile.json",
-            FileName = "自定义排版方案"
-        };
-        if (dialog.ShowDialog() == true)
-        {
-            var profile = FormattingProfileService.ExtractProfile(ViewModel.Settings.Preview.MarkdownToDocx);
-            if (FormattingProfileService.SaveProfileToFile(profile, dialog.FileName))
-            {
-                MessageBox.Show($"排版方案已导出到:\n{dialog.FileName}", "导出成功", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-        }
-    }
-
-    private void ImportProfile_Click_md2docx(object sender, RoutedEventArgs e)
-    {
-        var dialog = new OpenFileDialog
-        {
-            Filter = "排版方案文件|*.doc2md-profile.json|JSON 文件|*.json|所有文件|*.*"
-        };
-        if (dialog.ShowDialog() == true)
-        {
-            var profile = FormattingProfileService.LoadProfileFromFile(dialog.FileName);
-            if (profile != null)
-            {
-                FormattingProfileService.ApplyTo(profile, ViewModel.Settings.Preview.MarkdownToDocx);
-                ViewModel.Settings.Preview.MarkdownToDocx.FormatScheme = FormattingProfile.Custom;
-                ViewModel.NotifySettingsChanged();
-                MessageBox.Show($"已导入方案: {profile.Name}\n{profile.Description}", "导入成功", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            else
-            {
-                MessageBox.Show("无法读取排版方案文件，请检查文件格式。", "导入失败", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-    }
-
     // === FormatDoc 方案操作 ===
 
     private void ApplyProfile_Click_formatdoc(object sender, RoutedEventArgs e)

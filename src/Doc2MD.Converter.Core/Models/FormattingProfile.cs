@@ -7,7 +7,7 @@ namespace Doc2MD.Models;
 
 /// <summary>
 /// 统一排版选项模型：涵盖所有可配置的排版属性。
-/// 两个引擎（MarkdownToDocxParser、DocxFormatter）最终从此模型读取排版参数。
+/// DocxFormatter 从此模型读取排版参数。
 /// </summary>
 public class DocxFormattingOptions
 {

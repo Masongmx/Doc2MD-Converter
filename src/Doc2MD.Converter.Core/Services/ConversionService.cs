@@ -19,8 +19,7 @@ public class ConversionService
             new ExcelParser(),
             new PowerPointParser(),
             new TextParser(),
-            new PdfParser(),
-            new MarkdownToDocxParser()
+            new PdfParser()
         ];
     }
 
@@ -31,48 +30,6 @@ public class ConversionService
         string? inputRoot,
         ConversionTarget target,
         AppConfig? config,
-        CancellationToken cancellationToken)
-    {
-        await ConvertFileCoreAsync(file, outputDirectory, preserveStructure, inputRoot, target, config, null, cancellationToken);
-    }
-
-    /// <summary>
-    /// MarkdownToDocx 专用：传入 MarkdownToDocxPreviewSettings 以驱动排版参数
-    /// </summary>
-    public async Task ConvertFileAsync(
-        FileItem file,
-        string outputDirectory,
-        bool preserveStructure,
-        string? inputRoot,
-        ConversionTarget target,
-        MarkdownToDocxPreviewSettings? md2docxSettings,
-        CancellationToken cancellationToken)
-    {
-        await ConvertFileCoreAsync(file, outputDirectory, preserveStructure, inputRoot, target, null, md2docxSettings, cancellationToken);
-    }
-
-    /// <summary>
-    /// 向后兼容：旧调用方式不传 config 和 md2docxSettings
-    /// </summary>
-    public Task ConvertFileAsync(
-        FileItem file,
-        string outputDirectory,
-        bool preserveStructure,
-        string? inputRoot,
-        ConversionTarget target,
-        CancellationToken cancellationToken)
-    {
-        return ConvertFileCoreAsync(file, outputDirectory, preserveStructure, inputRoot, target, null, null, cancellationToken);
-    }
-
-    private async Task ConvertFileCoreAsync(
-        FileItem file,
-        string outputDirectory,
-        bool preserveStructure,
-        string? inputRoot,
-        ConversionTarget target,
-        AppConfig? config,
-        MarkdownToDocxPreviewSettings? md2docxSettings,
         CancellationToken cancellationToken)
     {
         file.Status = FileStatus.Processing;
@@ -89,12 +46,6 @@ public class ConversionService
 
         var currentOutputDirectory = ResolveOutputDirectory(file, outputDirectory, preserveStructure, inputRoot);
         Directory.CreateDirectory(currentOutputDirectory);
-
-        // 如果是 MarkdownToDocxParser，在 Parse 前注入 PreviewSettings
-        if (parser is MarkdownToDocxParser md2docxParser && md2docxSettings is not null)
-        {
-            md2docxParser.PreviewSettings = md2docxSettings;
-        }
 
         // 如果是 PdfParser，注入 OCR 配置
         if (parser is PdfParser pdfParser && config != null)

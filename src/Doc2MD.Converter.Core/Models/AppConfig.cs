@@ -105,9 +105,6 @@ public class MarkdownToDocxPreviewSettings
 
     /// <summary>Pipeline 排版引擎模板 ID（official-report / meeting-minutes / inspection-report）</summary>
     public string PipelineTemplateId { get; set; } = "official-report";
-
-    /// <summary>是否使用 Pipeline 引擎（默认开启，替代 Legacy MarkdownToDocxParser）</summary>
-    public bool UsePipelineEngine { get; set; } = true;
 }
 
 public class DocumentToMarkdownPreviewSettings

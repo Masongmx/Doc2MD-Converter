@@ -4,7 +4,7 @@ namespace Doc2MD.Pipeline.Services;
 
 /// <summary>
 /// 模板调度层：统一模板解析、选择能力，屏蔽 Repository 实现细节。
-/// 所有 CLI/GUI/MCP 均通过此服务获取模板，不允许直接访问 Repository。
+/// GUI 均通过此服务获取模板，不允许直接访问 Repository。
 /// </summary>
 public class TemplateService
 {

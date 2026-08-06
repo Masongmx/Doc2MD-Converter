@@ -33,8 +33,7 @@ public enum FileType
 
 public enum ConversionTarget
 {
-    Markdown,
-    OfficialDocx
+    Markdown
 }
 
 public enum ToastType

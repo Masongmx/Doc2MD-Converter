@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '93c7ce57-ac41-415c-86f3-dd390b2703b3'
-  PropagateID: '93c7ce57-ac41-415c-86f3-dd390b2703b3'
-  ReservedCode1: '6e538ba2-257c-4430-b024-cd6895885948'
-  ReservedCode2: '6e538ba2-257c-4430-b024-cd6895885948'
+  ProduceID: '7b38a16e-b31e-454a-b112-2b6576e5b3a5'
+  PropagateID: '7b38a16e-b31e-454a-b112-2b6576e5b3a5'
+  ReservedCode1: '6082c48f-e066-49bf-9713-7e9a10f1e41c'
+  ReservedCode2: '6082c48f-e066-49bf-9713-7e9a10f1e41c'
 ---
 
 # Changelog
@@ -51,7 +51,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Version unified to 2.0.0 across `AppVersion.cs` and `Doc2MD.csproj`
+- Version unified to 2.0.0 across `AppVersion.cs`, `.csproj`, publish scripts, and CHANGELOG
+
+### Removed
+
+- **Legacy Markdown→DOCX engine removed** — `MarkdownToDocxParser` (744 lines) deleted entirely; `UsePipelineEngine` config key removed; `ConversionTarget.OfficialDocx` enum value removed; all Legacy branch code in `MainViewModel` deleted
+- **CLI project removed** — `src/Doc2MD.Converter.Cli/` directory, CLI publish output, and all CLI references in solution/scripts/README deleted; GUI is now the sole entry point
+- **Legacy UI controls removed** — "排版引擎" toggle, "排版方案（旧版引擎）" section, and md2docx profile import/export buttons removed from PreviewSettingsDialog
+- **Legacy test methods removed** — `StripDocxPollutantsTests` and `TemplateAndFeatureTests` rewritten to test Pipeline path instead of deleted `MarkdownToDocxParser`
+
+### Changed
+
+- **Pipeline is now the sole MD→DOCX engine** — `MarkdownToDocxConverter.Convert()` is the only call chain; `MainViewModel.RunPipelineMd2DocxAsync` handles `PreserveFolderStructure`, same-name output file suffixing, output directory creation
+- **Format check extracted as independent service** — `DocxFormatChecker` class with 8 check categories (A4 page size, template-aware margins, title font/size, body font/size, line spacing, first-line indent, table actual width, doc grid)
+- **Format check bug fixes** — `int.Parse` → `int.TryParse` for line spacing; empty table `Max()` crash guard; table width check uses page usable width instead of ">8 columns" heuristic
+- **Config migration** — Old config files with `UsePipelineEngine=false` are handled gracefully (unknown JSON properties silently skipped by `System.Text.Json`)
 - All hardcoded formatting constants now read from `PreviewSettings` with GB/T 9704 fallback
 
 ## [1.5.1] - 2026-06-28

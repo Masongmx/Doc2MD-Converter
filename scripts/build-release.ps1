@@ -3,7 +3,7 @@
 
 param(
     [string]$Configuration = "Release",
-    [string]$Version = "1.0.0"
+    [string]$Version = "2.0.0"
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,4 +37,3 @@ Write-Host "All tests passed." -ForegroundColor Green
 Write-Host ""
 Write-Host "=== Build Complete ===" -ForegroundColor Cyan
 Write-Host "Output: $base\src\Doc2MD.Converter.App\bin\$Configuration\net8.0-windows\win-x64\"
-Write-Host "CLI:    $base\src\Doc2MD.Converter.Cli\bin\$Configuration\net8.0\"

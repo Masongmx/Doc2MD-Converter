@@ -917,21 +917,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 await RunFormattingAsync(file, outputDirectory, cancellationToken);
                 break;
             case AppMode.MarkdownToDocx:
-                if (Settings.Preview.MarkdownToDocx.UsePipelineEngine)
-                {
-                    await RunPipelineMd2DocxAsync(file, outputDirectory, cancellationToken);
-                }
-                else
-                {
-                    await _conversionService.ConvertFileAsync(
-                        file,
-                        outputDirectory,
-                        Settings.Conversion.PreserveFolderStructure,
-                        inputRoot,
-                        ConversionTarget.OfficialDocx,
-                        Settings.Preview.MarkdownToDocx,
-                        cancellationToken);
-                }
+                await RunPipelineMd2DocxAsync(file, outputDirectory, inputRoot, cancellationToken);
                 break;
             default:
                 await _conversionService.ConvertFileAsync(
@@ -981,7 +967,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private async Task RunPipelineMd2DocxAsync(FileItem file, string outputDirectory, CancellationToken cancellationToken)
+    private async Task RunPipelineMd2DocxAsync(FileItem file, string outputDirectory, string? inputRoot, CancellationToken cancellationToken)
     {
         try
         {
@@ -990,10 +976,37 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 templateId = "official-report";
 
             var converter = new MarkdownToDocxConverter();
-            Directory.CreateDirectory(outputDirectory);
 
-            var outputPath = Path.Combine(outputDirectory,
+            // Resolve output directory: apply PreserveFolderStructure if configured
+            var currentOutputDirectory = outputDirectory;
+            if (Settings.Conversion.PreserveFolderStructure && !string.IsNullOrWhiteSpace(inputRoot))
+            {
+                var fileDir = Path.GetDirectoryName(file.FullPath) ?? string.Empty;
+                if (fileDir.StartsWith(inputRoot, StringComparison.OrdinalIgnoreCase))
+                {
+                    var relativePath = fileDir[inputRoot.Length..].TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                    if (!string.IsNullOrWhiteSpace(relativePath))
+                        currentOutputDirectory = Path.Combine(outputDirectory, relativePath);
+                }
+            }
+
+            Directory.CreateDirectory(currentOutputDirectory);
+
+            var outputPath = Path.Combine(currentOutputDirectory,
                 Path.GetFileNameWithoutExtension(file.FullPath) + ".docx");
+
+            // Handle same-name output file: append suffix if file already exists
+            if (File.Exists(outputPath) && !Settings.General.OverwriteExistingFile)
+            {
+                var counter = 1;
+                var dir = Path.GetDirectoryName(outputPath)!;
+                var nameWithoutExt = Path.GetFileNameWithoutExtension(file.FullPath);
+                do
+                {
+                    outputPath = Path.Combine(dir, $"{nameWithoutExt}_{counter}.docx");
+                    counter++;
+                } while (File.Exists(outputPath));
+            }
 
             var result = await Task.Run(
                 () => converter.Convert(file.FullPath, outputPath, templateId),

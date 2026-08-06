@@ -4,7 +4,7 @@ namespace Doc2MD.Pipeline.Services;
 
 /// <summary>
 /// 统一模板存储入口：管理内置模板和用户模板。
-/// CLI/GUI/MCP 不允许直接访问文件系统，必须通过此 Repository（及 TemplateService）。
+/// GUI 不允许直接访问文件系统，必须通过此 Repository（及 TemplateService）。
 /// Phase 1 仅支持内置模板，用户模板操作留作 Phase 2 占位。
 /// </summary>
 public class TemplateRepository

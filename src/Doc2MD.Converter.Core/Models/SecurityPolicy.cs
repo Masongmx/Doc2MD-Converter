@@ -24,7 +24,7 @@ public class SecurityPolicy
     public List<string> AllowedDirectories { get; set; } = [];
 
     /// <summary>
-    /// 是否为本地上下文（CLI/GUI）。
+    /// 是否为本地上下文（GUI）。
     /// 本地上下文下 AllowedDirectories 为空时不限制路径访问。
     /// </summary>
     public bool IsLocalContext { get; set; } = true;

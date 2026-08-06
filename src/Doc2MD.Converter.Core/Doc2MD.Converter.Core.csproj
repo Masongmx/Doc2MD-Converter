@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>Doc2MD.Converter.Core</AssemblyName>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
     <Company>Doc2MD Converter</Company>
     <Product>Doc2MD Converter</Product>
     <Description>Document conversion and Chinese official document formatting engine</Description>

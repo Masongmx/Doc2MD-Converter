@@ -50,10 +50,6 @@
                                 </Style>
                             </Border.Style>
                             <StackPanel>
-                                <!-- 排版引擎开关 + Pipeline 模板选择 -->
-                                <TextBlock Text="排版引擎" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                <CheckBox Content="使用新版排版引擎（推荐）" IsChecked="{Binding Settings.Preview.MarkdownToDocx.UsePipelineEngine, UpdateSourceTrigger=PropertyChanged}" Margin="0,6,0,8"/>
-
                                 <!-- Pipeline 模板选择 -->
                                 <TextBlock Text="排版模板" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
                                 <Grid Margin="0,0,0,4">
@@ -68,28 +64,8 @@
                                     </ComboBox>
                                     <Button Grid.Column="1" Content="应用模板设置" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0,0,0" Click="ApplyPipelineTemplate_Click"/>
                                 </Grid>
-                                <TextBlock Text="选择模板后点击「应用模板设置」可将模板参数填充到下方，也可直接修改各项参数" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,14" TextWrapping="Wrap"/>
-
-                                <!-- 排版方案选择（Legacy） -->
-                                <TextBlock Text="排版方案（旧版引擎）" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
-                                <Grid Margin="0,0,0,4">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <ComboBox SelectedValue="{Binding Settings.Preview.MarkdownToDocx.FormatScheme, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Content">
-                                        <ComboBoxItem Content="标准公文格式"/>
-                                        <ComboBoxItem Content="企业增强版"/>
-                                        <ComboBoxItem Content="学术论文格式"/>
-                                        <ComboBoxItem Content="自定义"/>
-                                    </ComboBox>
-                                    <Button Grid.Column="1" Content="导入方案" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Click="ImportProfile_Click_md2docx"/>
-                                    <Button Grid.Column="2" Content="导出方案" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Click="ExportProfile_Click_md2docx"/>
-                                    <Button Grid.Column="3" Content="应用方案" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0,0,0" Click="ApplyProfile_Click_md2docx"/>
-                                </Grid>
-                                <TextBlock Text="选择方案后点击「应用方案」填充下方设置，也可直接修改各项参数" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,14" TextWrapping="Wrap"/>
+                                <TextBlock Text="选择模板后点击「应用模板设置」可将模板参数填充到下方，也可直接修改各项参数" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4" TextWrapping="Wrap"/>
+                                <TextBlock Text="当前排版以模板参数为准，下方字段供预览参考" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,14" TextWrapping="Wrap"/>
 
                                 <!-- 字体 -->
                                 <TextBlock Text="字体" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>

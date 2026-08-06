@@ -5,7 +5,7 @@ namespace Doc2MD.Constants;
 /// </summary>
 public static class AppVersion
 {
-    public const string Version = "1.0.0";
+    public const string Version = "2.0.0";
 
     /// <summary>对外显示的完整版本标识</summary>
     public static string FullString => $"Doc2MD Converter v{Version}";

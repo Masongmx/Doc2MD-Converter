@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '4cd69d34-fd2c-4b06-af20-e7458a87a997'
-  PropagateID: '4cd69d34-fd2c-4b06-af20-e7458a87a997'
-  ReservedCode1: 'a1b80fcc-352c-4b17-b790-3e1301af16d7'
-  ReservedCode2: 'a1b80fcc-352c-4b17-b790-3e1301af16d7'
+  ProduceID: 'd5e3758c-f3fa-4657-b9af-33a2fdcb8e2f'
+  PropagateID: 'd5e3758c-f3fa-4657-b9af-33a2fdcb8e2f'
+  ReservedCode1: '8d7f4a9d-a035-44e3-8dca-d30ae208b4ce'
+  ReservedCode2: '8d7f4a9d-a035-44e3-8dca-d30ae208b4ce'
 ---
 
 # Doc2MD Converter
@@ -29,7 +29,6 @@ AIGC:
 Doc2MD.Converter.slnx
 ├── src/Doc2MD.Converter.Core/    # 核心引擎（net8.0，无UI依赖）
 ├── src/Doc2MD.Converter.App/     # WPF 桌面应用（net8.0-windows）
-├── src/Doc2MD.Converter.Cli/     # 命令行接口（net8.0）
 └── tests/                        # 单元测试
 ```
 
@@ -44,9 +43,6 @@ dotnet test
 
 # 运行 GUI
 dotnet run --project src/Doc2MD.Converter.App
-
-# 运行 CLI
-dotnet run --project src/Doc2MD.Converter.Cli -- convert input.docx
 ```
 
 ## 离线能力

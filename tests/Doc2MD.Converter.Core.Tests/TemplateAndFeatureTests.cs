@@ -1,6 +1,6 @@
 using System.IO;
 using Doc2MD.Models;
-using Doc2MD.Parsers;
+using Doc2MD.Pipeline.Services;
 using Doc2MD.Services;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -136,10 +136,10 @@ public class TemplateAndFeatureTests
         Assert.Equal("C:\\templates\\report.dotx", settings.TemplatePath);
     }
 
-    // === MarkdownToDocxParser 无模板生成 ===
+    // === Pipeline MarkdownToDocxConverter 无模板生成 ===
 
     [Fact]
-    public void MarkdownToDocxParser_NoTemplate_CreatesDocx()
+    public void Pipeline_OfficialReport_CreatesDocx()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), $"Doc2MD_Test_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
@@ -148,9 +148,8 @@ public class TemplateAndFeatureTests
             var mdPath = Path.Combine(tempDir, "test.md");
             File.WriteAllText(mdPath, "# 测试标题\n\n正文内容。");
 
-            var parser = new MarkdownToDocxParser();
-            parser.PreviewSettings = new MarkdownToDocxPreviewSettings();
-            var result = parser.Parse(mdPath, tempDir, CancellationToken.None);
+            var converter = new MarkdownToDocxConverter();
+            var result = converter.Convert(mdPath, Path.Combine(tempDir, "output.docx"), "official-report");
 
             Assert.True(result.Success, result.ErrorMessage);
             Assert.True(File.Exists(result.OutputPath));
@@ -162,39 +161,10 @@ public class TemplateAndFeatureTests
         }
     }
 
-    // === MarkdownToDocxParser 模板不存在时回退 ===
+    // === Pipeline 多级标题 ===
 
     [Fact]
-    public void MarkdownToDocxParser_TemplateNotFound_FallsBackToNewDoc()
-    {
-        var tempDir = Path.Combine(Path.GetTempPath(), $"Doc2MD_Test_{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tempDir);
-        try
-        {
-            var mdPath = Path.Combine(tempDir, "test.md");
-            File.WriteAllText(mdPath, "# 测试标题\n\n正文内容。");
-
-            var parser = new MarkdownToDocxParser();
-            parser.PreviewSettings = new MarkdownToDocxPreviewSettings
-            {
-                TemplatePath = "C:\\nonexistent\\template.dotx"
-            };
-            var result = parser.Parse(mdPath, tempDir, CancellationToken.None);
-
-            // 模板不存在时应回退到新建文档
-            Assert.True(result.Success, result.ErrorMessage);
-            Assert.True(File.Exists(result.OutputPath));
-        }
-        finally
-        {
-            Directory.Delete(tempDir, true);
-        }
-    }
-
-    // === MarkdownToDocxParser 生成目录 ===
-
-    [Fact]
-    public void MarkdownToDocxParser_GenerateToc_CreatesDocxWithToc()
+    public void Pipeline_MultiLevelHeadings_CreatesDocx()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), $"Doc2MD_Test_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
@@ -203,38 +173,8 @@ public class TemplateAndFeatureTests
             var mdPath = Path.Combine(tempDir, "test.md");
             File.WriteAllText(mdPath, "# 标题一\n\n## 标题二\n\n### 标题三\n\n正文。");
 
-            var parser = new MarkdownToDocxParser();
-            parser.PreviewSettings = new MarkdownToDocxPreviewSettings { GenerateToc = true };
-            var result = parser.Parse(mdPath, tempDir, CancellationToken.None);
-
-            Assert.True(result.Success, result.ErrorMessage);
-            Assert.True(File.Exists(result.OutputPath));
-        }
-        finally
-        {
-            Directory.Delete(tempDir, true);
-        }
-    }
-
-    // === MarkdownToDocxParser 页眉页脚 ===
-
-    [Fact]
-    public void MarkdownToDocxParser_HeaderFooter_CreatesDocxWithHeaderFooter()
-    {
-        var tempDir = Path.Combine(Path.GetTempPath(), $"Doc2MD_Test_{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tempDir);
-        try
-        {
-            var mdPath = Path.Combine(tempDir, "test.md");
-            File.WriteAllText(mdPath, "# 测试标题\n\n正文。");
-
-            var parser = new MarkdownToDocxParser();
-            parser.PreviewSettings = new MarkdownToDocxPreviewSettings
-            {
-                HeaderText = "机密文件",
-                FooterText = "仅限内部使用"
-            };
-            var result = parser.Parse(mdPath, tempDir, CancellationToken.None);
+            var converter = new MarkdownToDocxConverter();
+            var result = converter.Convert(mdPath, Path.Combine(tempDir, "output.docx"), "official-report");
 
             Assert.True(result.Success, result.ErrorMessage);
         }
@@ -244,37 +184,139 @@ public class TemplateAndFeatureTests
         }
     }
 
-    // === MarkdownToDocxParser 模板克隆 ===
+    // === Pipeline 会议纪要模板 ===
 
     [Fact]
-    public void MarkdownToDocxParser_WithTemplate_ClonesAndWritesContent()
+    public void Pipeline_MeetingMinutes_CreatesDocx()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), $"Doc2MD_Test_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
         try
         {
-            // 先创建一个简单模板
-            var templatePath = Path.Combine(tempDir, "template.docx");
-            CreateSimpleTemplate(templatePath);
-
             var mdPath = Path.Combine(tempDir, "test.md");
-            File.WriteAllText(mdPath, "# 测试标题\n\n正文。");
+            File.WriteAllText(mdPath, "# 会议纪要\n\n时间：2026年8月\n\n一、议题\n\n讨论内容。");
 
-            var parser = new MarkdownToDocxParser();
-            parser.PreviewSettings = new MarkdownToDocxPreviewSettings
-            {
-                TemplatePath = templatePath
-            };
-            var result = parser.Parse(mdPath, tempDir, CancellationToken.None);
+            var converter = new MarkdownToDocxConverter();
+            var result = converter.Convert(mdPath, Path.Combine(tempDir, "output.docx"), "meeting-minutes");
 
             Assert.True(result.Success, result.ErrorMessage);
-            Assert.True(File.Exists(result.OutputPath));
-            Assert.True(new FileInfo(result.OutputPath).Length > 0);
         }
         finally
         {
             Directory.Delete(tempDir, true);
         }
+    }
+
+    // === Pipeline 巡察文档模板 ===
+
+    [Fact]
+    public void Pipeline_InspectionReport_CreatesDocx()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"Doc2MD_Test_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            var mdPath = Path.Combine(tempDir, "test.md");
+            File.WriteAllText(mdPath, "# 巡察报告\n\n一、基本情况\n\n描述内容。");
+
+            var converter = new MarkdownToDocxConverter();
+            var result = converter.Convert(mdPath, Path.Combine(tempDir, "output.docx"), "inspection-report");
+
+            Assert.True(result.Success, result.ErrorMessage);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    // === Pipeline 格式检查报告生成 ===
+
+    [Fact]
+    public void Pipeline_GeneratesFormatCheckReport()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"Doc2MD_Test_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            var mdPath = Path.Combine(tempDir, "test.md");
+            File.WriteAllText(mdPath, "# 测试标题\n\n正文内容。");
+
+            var converter = new MarkdownToDocxConverter();
+            var result = converter.Convert(mdPath, Path.Combine(tempDir, "output.docx"), "official-report");
+
+            Assert.True(result.Success, result.ErrorMessage);
+            Assert.True(File.Exists(result.FormatCheckReportPath), "格式检查报告文件应存在");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    // === Pipeline 输入文件不存在 ===
+
+    [Fact]
+    public void Pipeline_NonexistentFile_ReturnsError()
+    {
+        var converter = new MarkdownToDocxConverter();
+        var result = converter.Convert("C:\\nonexistent\\file.md", "C:\\output.docx", "official-report");
+
+        Assert.False(result.Success);
+        Assert.Contains("不存在", result.ErrorMessage);
+    }
+
+    // === DocxFormatChecker 独立测试 ===
+
+    [Fact]
+    public void DocxFormatChecker_ChecksRenderedDocx()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"Doc2MD_Test_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            var mdPath = Path.Combine(tempDir, "test.md");
+            File.WriteAllText(mdPath, "# 测试标题\n\n正文内容。");
+
+            var converter = new MarkdownToDocxConverter();
+            var outputPath = Path.Combine(tempDir, "output.docx");
+            var result = converter.Convert(mdPath, outputPath, "official-report");
+
+            Assert.True(result.Success);
+
+            var checker = new DocxFormatChecker();
+            var report = checker.Check(outputPath, "official-report");
+
+            Assert.Equal("official-report", report.Template);
+            Assert.NotNull(report.Issues);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    // === 旧配置文件兼容性：UsePipelineEngine 被移除后应静默跳过 ===
+
+    [Fact]
+    public void AppConfig_OldConfigWithUsePipelineEngine_SilentlyIgnored()
+    {
+        // 模拟旧配置文件中包含已删除的 UsePipelineEngine 属性
+        var json = @"{
+            ""General"": { ""DefaultOutputDir"": ""C:\\output"" },
+            ""Preview"": {
+                ""MarkdownToDocx"": {
+                    ""UsePipelineEngine"": false,
+                    ""PipelineTemplateId"": ""official-report""
+                }
+            }
+        }";
+
+        var config = System.Text.Json.JsonSerializer.Deserialize<AppConfig>(json);
+        Assert.NotNull(config);
+        Assert.Equal("C:\\output", config.General.DefaultOutputDir);
+        Assert.Equal("official-report", config.Preview.MarkdownToDocx.PipelineTemplateId);
+        // UsePipelineEngine 已不存在于模型中，JSON 反序列化静默跳过
     }
 
     // === DocxFormatter 无模板排版 ===
@@ -331,21 +373,6 @@ public class TemplateAndFeatureTests
     }
 
     // === 辅助方法 ===
-
-    private static void CreateSimpleTemplate(string path)
-    {
-        using var doc = WordprocessingDocument.Create(path, WordprocessingDocumentType.Document);
-        var mainPart = doc.AddMainDocumentPart();
-        var body = new Body();
-        body.Append(new Paragraph(
-            new Run(
-                new Text("模板内容（应被清除）"))));
-        body.Append(new SectionProperties(
-            new PageSize { Width = 11906U, Height = 16838U },
-            new PageMargin { Top = 2098, Bottom = 1984, Left = 1587, Right = 1474 }));
-        mainPart.Document = new Document(body);
-        mainPart.Document.Save();
-    }
 
     private static void CreateSimpleDocx(string path)
     {
