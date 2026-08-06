@@ -22,4 +22,8 @@
     <ProjectReference Include="..\..\src\Doc2MD.Converter.Core\Doc2MD.Converter.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="fixtures\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
