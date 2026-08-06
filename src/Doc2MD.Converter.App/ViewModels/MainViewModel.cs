@@ -851,7 +851,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public void CopySoftwareInfo()
     {
-        var info = $"文档处理器 {AppVersion}{Environment.NewLine}本地离线运行{Environment.NewLine}日志目录：{AppPaths.LogDirectory}";
+        var info = $"Doc2MD Converter {AppVersion}{Environment.NewLine}本地离线运行{Environment.NewLine}日志目录：{AppPaths.LogDirectory}";
         Clipboard.SetText(info);
         ShowToast("已复制软件信息", ToastType.Success);
     }

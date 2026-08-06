@@ -217,7 +217,7 @@
                             </Border.Style>
                             <StackPanel>
                                 <TextBlock Text="关于软件" Style="{StaticResource DialogSectionTitleStyle}"/>
-                                <TextBlock Text="文档处理器" FontSize="16" FontWeight="SemiBold"/>
+                                <TextBlock Text="Doc2MD Converter" FontSize="16" FontWeight="SemiBold"/>
                                 <TextBlock Text="{Binding AppVersion, StringFormat=当前版本：{0}}" Margin="0,8,0,0" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Text="本地离线运行" Margin="0,6,0,0" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Text="支持文档转换、Markdown 生成、公文规范排版" Margin="0,6,0,24" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>

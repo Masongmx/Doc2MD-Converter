@@ -6,7 +6,7 @@
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:vm="clr-namespace:Doc2MD.ViewModels"
         mc:Ignorable="d"
-        Title="文档处理器"
+        Title="Doc2MD Converter"
         Width="1280"
         Height="760"
         MinWidth="1100"
@@ -65,7 +65,7 @@
                     <Border Width="32" Height="32" Background="{DynamicResource BgActiveBrush}" CornerRadius="10">
                         <TextBlock Text="文" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock Text="文档处理器" Margin="10,0,0,0" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Text="Doc2MD Converter" Margin="10,0,0,0" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
