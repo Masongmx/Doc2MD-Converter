@@ -1,0 +1,28 @@
+﻿<Application x:Class="Doc2MD.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:Doc2MD.Converters"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <converters:CountToVisibilityConverter x:Key="CountToVisibleConverter"/>
+            <converters:ZeroToVisibilityConverter x:Key="ZeroToVisibleConverter"/>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+            <converters:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToVisibilityConverter"/>
+            <converters:FileStatusTextConverter x:Key="FileStatusTextConverter"/>
+            <converters:FileStatusActionTextConverter x:Key="FileStatusActionTextConverter"/>
+            <converters:FileStatusBackgroundConverter x:Key="FileStatusBackgroundConverter"/>
+            <converters:FileStatusForegroundConverter x:Key="FileStatusForegroundConverter"/>
+            <converters:FileStatusProcessingVisibilityConverter x:Key="FileStatusProcessingVisibilityConverter"/>
+            <converters:FileTypeIconConverter x:Key="FileTypeIconConverter"/>
+            <converters:ToneBrushConverter x:Key="ToneBrushConverter"/>
+            <converters:ToastBackgroundConverter x:Key="ToastBackgroundConverter"/>
+            <converters:PercentToWidthConverter x:Key="PercentToWidthConverter"/>
+            <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

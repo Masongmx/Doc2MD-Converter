@@ -1,0 +1,31 @@
+# Build output
+bin/
+obj/
+publish/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test results
+TestResults/
+*.trx
+
+# NuGet
+*.nupkg
+packages/
+.nuget/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Temporary
+.temp/
+*.tmp
+*.log

@@ -1,0 +1,242 @@
+<Window x:Class="Doc2MD.SettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:Doc2MD.Models;assembly=Doc2MD.Converter.Core"
+        Title="设置"
+        Width="760"
+        Height="520"
+        MinWidth="640"
+        MinHeight="440"
+        ResizeMode="CanResize"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BgMainBrush}">
+    <Grid Margin="18">
+        <Grid.LayoutTransform>
+            <ScaleTransform ScaleX="{Binding UiScale}" ScaleY="{Binding UiScale}"/>
+        </Grid.LayoutTransform>
+        <Border Style="{StaticResource PanelCardStyle}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <ListBox Grid.RowSpan="2"
+                         BorderThickness="0"
+                         Background="Transparent"
+                         SelectedValue="{Binding SelectedSettingsSection, Mode=TwoWay}"
+                         SelectedValuePath="Content"
+                         ItemContainerStyle="{StaticResource DialogNavButtonStyle}">
+                    <ListBoxItem Content="通用设置"/>
+                    <ListBoxItem Content="外观设置"/>
+                    <ListBoxItem Content="转换设置"/>
+                    <ListBoxItem Content="模板设置"/>
+                    <ListBoxItem Content="关于软件"/>
+                </ListBox>
+
+                <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                        <Border Background="Transparent">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedSettingsSection}" Value="通用设置">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel>
+                                <TextBlock Text="通用设置" Style="{StaticResource DialogSectionTitleStyle}"/>
+                                <TextBlock Text="默认输出目录" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <Grid Margin="0,8,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding Settings.General.DefaultOutputDir, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <Button Grid.Column="1" Content="浏览" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Click="BrowseDefaultOutput_Click"/>
+                                    <Button Grid.Column="2" Content="打开" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Click="OpenDefaultOutput_Click"/>
+                                </Grid>
+                                <CheckBox Content="是否保留原文件名" IsChecked="{Binding Settings.General.KeepOriginalFileName}" Margin="0,0,0,10"/>
+                                <CheckBox Content="是否覆盖已存在文件" IsChecked="{Binding Settings.General.OverwriteExistingFile}" Margin="0,0,0,10"/>
+                                <CheckBox Content="转换完成后自动打开输出目录" IsChecked="{Binding Settings.General.AutoOpenOutputDir}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="Transparent">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedSettingsSection}" Value="外观设置">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel>
+                                <TextBlock Text="外观设置" Style="{StaticResource DialogSectionTitleStyle}"/>
+                                <TextBlock Text="主题模式" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <ComboBox Margin="0,8,0,16" SelectedValue="{Binding Settings.Appearance.Theme}" SelectedValuePath="Tag">
+                                    <ComboBoxItem Content="浅色" Tag="{x:Static models:ThemeMode.Light}"/>
+                                    <ComboBoxItem Content="深色" Tag="{x:Static models:ThemeMode.Dark}"/>
+                                    <ComboBoxItem Content="跟随系统" Tag="{x:Static models:ThemeMode.System}"/>
+                                </ComboBox>
+                                <TextBlock Text="动效强度" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <ComboBox Margin="0,8,0,16" SelectedValue="{Binding Settings.Appearance.Motion}" SelectedValuePath="Tag">
+                                    <ComboBoxItem Content="关闭" Tag="{x:Static models:MotionLevel.Off}"/>
+                                    <ComboBoxItem Content="标准" Tag="{x:Static models:MotionLevel.Standard}"/>
+                                    <ComboBoxItem Content="丝滑" Tag="{x:Static models:MotionLevel.Smooth}"/>
+                                </ComboBox>
+                                <TextBlock Text="界面缩放" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <ComboBox Margin="0,8,0,0" SelectedValue="{Binding Settings.Appearance.Scale}" SelectedValuePath="Tag">
+                                    <ComboBoxItem Content="100%">
+                                        <ComboBoxItem.Tag>
+                                            <sys:Double xmlns:sys="clr-namespace:System;assembly=mscorlib">1.0</sys:Double>
+                                        </ComboBoxItem.Tag>
+                                    </ComboBoxItem>
+                                    <ComboBoxItem Content="110%">
+                                        <ComboBoxItem.Tag>
+                                            <sys:Double xmlns:sys="clr-namespace:System;assembly=mscorlib">1.1</sys:Double>
+                                        </ComboBoxItem.Tag>
+                                    </ComboBoxItem>
+                                    <ComboBoxItem Content="125%">
+                                        <ComboBoxItem.Tag>
+                                            <sys:Double xmlns:sys="clr-namespace:System;assembly=mscorlib">1.25</sys:Double>
+                                        </ComboBoxItem.Tag>
+                                    </ComboBoxItem>
+                                </ComboBox>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="Transparent">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedSettingsSection}" Value="转换设置">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel>
+                                <TextBlock Text="转换设置" Style="{StaticResource DialogSectionTitleStyle}"/>
+                                <CheckBox Content="递归扫描子文件夹" IsChecked="{Binding Settings.Conversion.RecursiveScan}" Margin="0,0,0,10"/>
+                                <CheckBox Content="忽略隐藏文件" IsChecked="{Binding Settings.Conversion.IgnoreHiddenFiles}" Margin="0,0,0,10"/>
+                                <TextBlock Text="最大并发任务数" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <ComboBox Margin="0,8,0,16" SelectedValue="{Binding Settings.Conversion.MaxConcurrentTasks}" SelectedValuePath="Tag">
+                                    <ComboBoxItem Content="1">
+                                        <ComboBoxItem.Tag>
+                                            <sys:Int32 xmlns:sys="clr-namespace:System;assembly=mscorlib">1</sys:Int32>
+                                        </ComboBoxItem.Tag>
+                                    </ComboBoxItem>
+                                    <ComboBoxItem Content="2">
+                                        <ComboBoxItem.Tag>
+                                            <sys:Int32 xmlns:sys="clr-namespace:System;assembly=mscorlib">2</sys:Int32>
+                                        </ComboBoxItem.Tag>
+                                    </ComboBoxItem>
+                                    <ComboBoxItem Content="3">
+                                        <ComboBoxItem.Tag>
+                                            <sys:Int32 xmlns:sys="clr-namespace:System;assembly=mscorlib">3</sys:Int32>
+                                        </ComboBoxItem.Tag>
+                                    </ComboBoxItem>
+                                    <ComboBoxItem Content="4">
+                                        <ComboBoxItem.Tag>
+                                            <sys:Int32 xmlns:sys="clr-namespace:System;assembly=mscorlib">4</sys:Int32>
+                                        </ComboBoxItem.Tag>
+                                    </ComboBoxItem>
+                                </ComboBox>
+                                <CheckBox Content="失败后继续处理后续文件" IsChecked="{Binding Settings.Conversion.ContinueOnError}" Margin="0,0,0,10"/>
+                                <TextBlock Text="输出模式" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <ComboBox Margin="0,8,0,0" SelectedValue="{Binding Settings.Conversion.OutputPackageMode}" SelectedValuePath="Tag">
+                                    <ComboBoxItem Content="混合包（Markdown + 元数据 + 质量报告）" Tag="{x:Static models:OutputPackageMode.HybridPackage}"/>
+                                    <ComboBoxItem Content="单文件（仅 Markdown）" Tag="{x:Static models:OutputPackageMode.SingleMd}"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="Transparent">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedSettingsSection}" Value="模板设置">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel>
+                                <TextBlock Text="模板设置" Style="{StaticResource DialogSectionTitleStyle}"/>
+                                <TextBlock Text="设置默认模板文件，Markdown 转 Word 和一键排版时会自动使用对应模板" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,14"/>
+                                <TextBlock Text="Markdown 转 Word 模板" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <Grid Margin="0,8,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding Settings.Templates.DefaultDocxTemplate, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <Button Grid.Column="1" Content="浏览" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Click="BrowseDefaultTemplate_Click"/>
+                                    <Button Grid.Column="2" Content="重置" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Click="ResetDefaultTemplate_Click"/>
+                                </Grid>
+                                <TextBlock Text="一键排版模板" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding Settings.Templates.OfficialDocTemplate, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <Button Grid.Column="1" Content="浏览" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Click="BrowseOfficialTemplate_Click"/>
+                                    <Button Grid.Column="2" Content="重置" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Click="ResetOfficialTemplate_Click"/>
+                                </Grid>
+                                <TextBlock Text="模板文件仅提供页面布局、样式定义和页眉页脚，实际排版仍由排版方案控制" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,14,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="Transparent">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedSettingsSection}" Value="关于软件">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel>
+                                <TextBlock Text="关于软件" Style="{StaticResource DialogSectionTitleStyle}"/>
+                                <TextBlock Text="文档处理器" FontSize="16" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding AppVersion, StringFormat=当前版本：{0}}" Margin="0,8,0,0" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="本地离线运行" Margin="0,6,0,0" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="支持文档转换、Markdown 生成、公文规范排版" Margin="0,6,0,24" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="检查更新" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False"/>
+                                    <Button Content="打开日志目录" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Click="OpenLogs_Click"/>
+                                    <Button Content="查看开源许可" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Click="OpenLicenses_Click"/>
+                                </StackPanel>
+                                <TextBlock Text="当前版本暂不支持自动更新" Margin="0,10,0,0" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </ScrollViewer>
+
+                <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                    <Button Content="取消" Style="{StaticResource SecondaryButtonStyle}" Click="Close_Click"/>
+                    <Button Content="保存设置" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0,0,0" Click="Save_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

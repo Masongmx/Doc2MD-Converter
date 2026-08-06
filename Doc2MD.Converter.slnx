@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Doc2MD.Converter.App/Doc2MD.Converter.App.csproj" />
+    <Project Path="src/Doc2MD.Converter.Cli/Doc2MD.Converter.Cli.csproj" />
+    <Project Path="src/Doc2MD.Converter.Core/Doc2MD.Converter.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Doc2MD.Converter.Core.Tests/Doc2MD.Converter.Core.Tests.csproj" />
+  </Folder>
+</Solution>
