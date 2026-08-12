@@ -43,7 +43,7 @@ public class MarkdownPostProcessorTests
     [Fact]
     public void Process_MarkdownWithAigcWatermark_FiltersAndAddsWarning()
     {
-        var rawMd = "---\nAIGC:\n  ContentProducer: '001191110102MAD55U9H0F10002'\n  Label: '1'\n---\n\n# Title\n\nBody.";
+        var rawMd = "---\nAIGC:\n  ContentProducer: 'TESTPRODUCER000000000000001'\n  Label: '1'\n---\n\n# Title\n\nBody.";
 
         var result = new ConversionResult
         {
