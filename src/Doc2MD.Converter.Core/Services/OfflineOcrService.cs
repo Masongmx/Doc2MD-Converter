@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -15,6 +16,17 @@ public static class OfflineOcrService
         var executable = FindExecutable();
         if (executable is null)
             return OcrResult.Fail("该 PDF 没有可提取文本，且未找到 OCRmyPDF。请安装 OCRmyPDF + 中文语言包 chi_sim，或设置 DOC2MD_OCRMYPDF_PATH。");
+
+        // 为 OCRmyPDF 进程提供内置 Tesseract 的 PATH 与 TESSDATA_PREFIX（便携版自包含）
+        var tesseractDir = FindTesseractDirectory();
+        var envVars = new Dictionary<string, string>();
+        if (tesseractDir is not null)
+        {
+            envVars["PATH"] = tesseractDir + Path.PathSeparator + (Environment.GetEnvironmentVariable("PATH") ?? string.Empty);
+            var tessdataDir = Path.Combine(tesseractDir, "tessdata");
+            if (Directory.Exists(tessdataDir))
+                envVars["TESSDATA_PREFIX"] = tessdataDir;
+        }
 
         var tempDirectory = Path.Combine(Path.GetTempPath(), "Doc2MD", "ocr", Guid.NewGuid().ToString("N"));
         try
@@ -33,6 +45,8 @@ public static class OfflineOcrService
                     CreateNoWindow = true
                 }
             };
+            foreach (var (key, value) in envVars)
+                process.StartInfo.Environment[key] = value;
             process.StartInfo.ArgumentList.Add("--force-ocr");
             process.StartInfo.ArgumentList.Add("--deskew");
             process.StartInfo.ArgumentList.Add("--rotate-pages");
@@ -96,9 +110,33 @@ public static class OfflineOcrService
         var candidates = new[]
         {
             Environment.GetEnvironmentVariable("DOC2MD_OCRMYPDF_PATH"),
-            Path.Combine(appDirectory, "tools", "OCRmyPDF", "ocrmypdf.exe")
+            // 完整版：Python 环境（ocrmypdf.exe 位于 Scripts\ 子目录）
+            Path.Combine(appDirectory, "tools", "OCRmyPDF", "Scripts", "ocrmypdf.exe"),
+            Path.Combine(appDirectory, "tools", "OCRmyPDF", "ocrmypdf.exe"),
+            // 精简版：干净 venv
+            Path.Combine(appDirectory, "tools", "OCRmyPDF-slim", "Scripts", "ocrmypdf.exe"),
+            Path.Combine(appDirectory, "tools", "OCRmyPDF-slim", "ocrmypdf.exe")
         };
         return candidates.FirstOrDefault(path => !string.IsNullOrWhiteSpace(path) && File.Exists(path));
+    }
+
+    /// <summary>
+    /// 查找随 OCRmyPDF 便携包内置的 Tesseract 目录（便携包根\tesseract\）。
+    /// 优先于系统安装版，确保离线自包含。
+    /// </summary>
+    private static string? FindTesseractDirectory()
+    {
+        var appDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        var candidates = new[]
+        {
+            Path.Combine(appDirectory, "tools", "OCRmyPDF", "tesseract"),
+            Path.Combine(appDirectory, "tools", "OCRmyPDF-slim", "tesseract")
+        };
+        var dir = candidates.FirstOrDefault(path => Directory.Exists(path));
+        if (dir is not null) return dir;
+        // 回退：系统安装的 Tesseract
+        var systemTesseract = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Tesseract-OCR");
+        return Directory.Exists(systemTesseract) ? systemTesseract : null;
     }
 }
 

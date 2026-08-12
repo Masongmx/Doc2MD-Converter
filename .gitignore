@@ -47,3 +47,6 @@ secrets.json
 tools/LibreOffice/
 tools/OCR/
 tools/OCRmyPDF/
+tools/OCRmyPDF-slim/
+tools/Tesseract/
+tools/.lo-profile/

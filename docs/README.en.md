@@ -139,6 +139,17 @@ Optional external tools (with clear hints when missing; core flow unaffected):
 | LibreOffice | Legacy binary Office formats (.doc / .xls / .ppt) |
 | OCRmyPDF + Tesseract (chi_sim) | OCR for scanned PDFs |
 
+**Offline no-install option**: ship the `tools/` directory alongside the app. Everything runs locally.
+
+```text
+tools/
+├── LibreOffice/          # .doc/.xls/.ppt conversion (uses program/soffice.com)
+├── OCRmyPDF/             # Full OCR bundle (embedded Python + Tesseract/chi_sim, ~990MB)
+└── OCRmyPDF-slim/        # Slim OCR bundle (embedded Tesseract/chi_sim, ~300MB)
+```
+
+Pick either `OCRmyPDF` or `OCRmyPDF-slim`; the app auto-detects (full version wins if both exist). See [tools/README.md](../tools/README.md).
+
 ## Build & Run
 
 ```powershell

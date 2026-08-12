@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **绿色便携版外部引擎适配**：LibreOffice 便携版 headless 调用从 `soffice.exe` 改为 `soffice.com`（GUI 启动器在 headless 场景会挂起）；调用时附加独立 `-env:UserInstallation` 用户配置目录，避免与系统已运行的 LibreOffice 实例抢占；`FindLibreOffice` 探测顺序扩展为：环境变量 → 程序目录 `tools\LibreOffice\program\soffice.com` → `soffice.exe` → 系统安装版（Program Files / Program Files (x86) 的 .com/.exe）
+- **OCRmyPDF 两种便携形态支持**：`OfflineOcrService.FindExecutable` 支持完整版（`tools\OCRmyPDF\Scripts\ocrmypdf.exe`）与精简版（`tools\OCRmyPDF-slim\Scripts\ocrmypdf.exe`）两种布局自动探测；启动 OCRmyPDF 进程时自动注入内置 Tesseract 的 `PATH` 与 `TESSDATA_PREFIX` 环境变量，实现离线自包含 OCR，无需手工配置
 - `MainWindow.xaml` 移除 XAML 内嵌 `<vm:MainViewModel/>` 实例化与 `App.xaml` 的 `StartupUri`，改为 `App.OnStartup` 从 DI 容器解析并设置 `DataContext`
 - **统一 `DocxFormattingOptions`**（C2）：删除 Pipeline 命名空间下与 `Doc2MD.Models` 中同名的重复类，统一为单一模型（保留多级标题/页码/文档网格/字间距等 Pipeline 属性，合并 FormatDoc 侧 Markdown 标题/代码块字体属性），`DocxTemplate`/`DocxRenderer`/`StyleApplier` 改用 `Doc2MD.Models` 引用；内置"企业增强版"方案改为复用 `EnterpriseEnhanced()` 工厂方法，与 Pipeline 企业增强版模板参数完全一致；补充 9 个单元测试覆盖工厂方法、缩进计算、JSON 往返与设置双向映射
 - **MainWindow 构造函数注入 ViewModel**（C7）：移除 `(MainViewModel)DataContext` 强制转换，改为构造函数注入（App 启动时从 DI 容器解析）

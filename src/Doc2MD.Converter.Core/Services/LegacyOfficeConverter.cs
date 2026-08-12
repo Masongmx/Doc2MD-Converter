@@ -31,6 +31,10 @@ public static class LegacyOfficeConverter
                 }
             };
             process.StartInfo.ArgumentList.Add("--headless");
+            // 指定独立用户配置目录：避免与本机已运行的 LibreOffice 实例（GUI/服务）抢占，
+            // 也避免 headless 调用 soffice.exe 启动器时因单实例模式挂起
+            if (!string.IsNullOrEmpty(PortableProfileUri))
+                process.StartInfo.ArgumentList.Add($"-env:UserInstallation={PortableProfileUri}");
             process.StartInfo.ArgumentList.Add("--convert-to");
             process.StartInfo.ArgumentList.Add(targetExtension.TrimStart('.'));
             process.StartInfo.ArgumentList.Add("--outdir");
@@ -93,14 +97,40 @@ public static class LegacyOfficeConverter
         if (!string.IsNullOrWhiteSpace(result.TempDirectory)) TryDelete(result.TempDirectory);
     }
 
+    /// <summary>
+    /// 便携版/系统版 LibreOffice 的独立用户配置目录（持久化于 %TEMP%\Doc2MD\lo-profile）。
+    /// 首次使用会初始化配置（较慢），之后复用同一配置加速。
+    /// </summary>
+    private static readonly string PortableProfileUri = BuildPortableProfile();
+
+    private static string BuildPortableProfile()
+    {
+        try
+        {
+            var profileDir = Path.Combine(Path.GetTempPath(), "Doc2MD", "lo-profile");
+            Directory.CreateDirectory(profileDir);
+            return new Uri(profileDir).AbsoluteUri;
+        }
+        catch
+        {
+            // 无法创建独立配置时退回默认行为
+            return string.Empty;
+        }
+    }
+
     private static string? FindLibreOffice()
     {
         var appDirectory = AppDomain.CurrentDomain.BaseDirectory;
         var candidates = new[]
         {
             Environment.GetEnvironmentVariable("DOC2MD_LIBREOFFICE_PATH"),
+            // 便携版：优先 soffice.com（Windows 下 headless 控制台入口，soffice.exe 为 GUI 启动器会卡死）
+            Path.Combine(appDirectory, "tools", "LibreOffice", "program", "soffice.com"),
             Path.Combine(appDirectory, "tools", "LibreOffice", "program", "soffice.exe"),
+            // 系统安装版
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "LibreOffice", "program", "soffice.com"),
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "LibreOffice", "program", "soffice.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "LibreOffice", "program", "soffice.com"),
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "LibreOffice", "program", "soffice.exe")
         };
         return candidates.FirstOrDefault(path => !string.IsNullOrWhiteSpace(path) && File.Exists(path));
