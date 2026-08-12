@@ -139,16 +139,13 @@ Optional external tools (with clear hints when missing; core flow unaffected):
 | LibreOffice | Legacy binary Office formats (.doc / .xls / .ppt) |
 | OCRmyPDF + Tesseract (chi_sim) | OCR for scanned PDFs |
 
-**Offline no-install option**: ship the `tools/` directory alongside the app. Everything runs locally.
+**Deployment strategy (slim-first)**:
 
-```text
-tools/
-├── LibreOffice/          # .doc/.xls/.ppt conversion (uses program/soffice.com)
-├── OCRmyPDF/             # Full OCR bundle (embedded Python + Tesseract/chi_sim, ~990MB)
-└── OCRmyPDF-slim/        # Slim OCR bundle (embedded Tesseract/chi_sim, ~300MB)
-```
+- **Slim (default)**: just download `Doc2MD.Converter.exe` and run. Covers PDF / DOCX / XLSX / PPTX conversion and official-document formatting.
+- **Full**: install LibreOffice, Tesseract and OCRmyPDF on a networked machine following the official guides (the app auto-detects system install paths) to unlock legacy .doc/.xls/.ppt and scanned-PDF OCR.
+- **Offline**: ship the `tools/` portable directory alongside the exe. Everything runs locally without installation (`tools/LibreOffice/` + `tools/OCRmyPDF/` or `tools/OCRmyPDF-slim/`).
 
-Pick either `OCRmyPDF` or `OCRmyPDF-slim`; the app auto-detects (full version wins if both exist). See [tools/README.md](../tools/README.md).
+See [Deployment Guide](../docs/内网离线部署指南.md) for details.
 
 ## Build & Run
 

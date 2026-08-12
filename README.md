@@ -141,18 +141,13 @@ flowchart LR
 | LibreOffice | 旧式 .doc / .xls / .ppt 二进制 Office 格式转换 |
 | OCRmyPDF + Tesseract (chi_sim) | 扫描型 PDF 的 OCR 识别 |
 
-**内网用户免安装方案（绿色便携版）**：将 `tools/` 目录随程序放置即可，全部离线、免安装。
+**部署策略（精简版优先）**：
 
-```text
-tools/
-├── LibreOffice/          # .doc/.xls/.ppt 转换（程序调用 program/soffice.com）
-├── OCRmyPDF/             # OCR 完整版（内置 Python 环境 + Tesseract/chi_sim，约 990MB）
-└── OCRmyPDF-slim/        # OCR 精简版（内置 Tesseract/chi_sim，约 300MB）
-```
+- **精简版（默认）**：仅下载 `Doc2MD.Converter.exe` 即可使用，覆盖 PDF / DOCX / XLSX / PPTX 转换与公文排版等日常场景
+- **完整版**：在可上网的机器按官方指引安装 LibreOffice、Tesseract、OCRmyPDF（程序自动识别系统安装路径），解锁旧式 .doc/.xls/.ppt 与扫描 PDF OCR
+- **断网场景**：将 `tools/` 便携目录随 exe 放置，全部离线免安装（`tools/LibreOffice/` + `tools/OCRmyPDF/` 或 `tools/OCRmyPDF-slim/`）
 
-`OCRmyPDF` 与 `OCRmyPDF-slim` 二选一即可，程序自动识别；两者都放时优先完整版。详情见 [tools/README.md](tools/README.md)。
-
-内网用户部署步骤与故障排查见 [内网离线部署指南](docs/内网离线部署指南.md)。
+选择与安装步骤见 [部署指南](docs/内网离线部署指南.md)。
 
 ## 构建与运行
 

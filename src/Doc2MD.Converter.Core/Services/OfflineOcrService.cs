@@ -107,7 +107,7 @@ public static class OfflineOcrService
     private static string? FindExecutable()
     {
         var appDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        var candidates = new[]
+        var candidates = new List<string?>
         {
             Environment.GetEnvironmentVariable("DOC2MD_OCRMYPDF_PATH"),
             // 完整版：Python 环境（ocrmypdf.exe 位于 Scripts\ 子目录）
@@ -117,12 +117,52 @@ public static class OfflineOcrService
             Path.Combine(appDirectory, "tools", "OCRmyPDF-slim", "Scripts", "ocrmypdf.exe"),
             Path.Combine(appDirectory, "tools", "OCRmyPDF-slim", "ocrmypdf.exe")
         };
+        // 系统安装版（外网 pip install ocrmypdf）：常见 Python Scripts 目录 + PATH 查找
+        foreach (var pythonDir in new[]
+                 {
+                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Python"),
+                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Python"),
+                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Python"),
+                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "Local", "Programs", "Python")
+                 })
+        {
+            if (Directory.Exists(pythonDir))
+            {
+                foreach (var versionDir in Directory.GetDirectories(pythonDir))
+                {
+                    candidates.Add(Path.Combine(versionDir, "Scripts", "ocrmypdf.exe"));
+                }
+            }
+        }
+        var byPath = FindOnPath("ocrmypdf.exe");
+        if (byPath is not null) candidates.Add(byPath);
+
         return candidates.FirstOrDefault(path => !string.IsNullOrWhiteSpace(path) && File.Exists(path));
     }
 
+    /// <summary>在 PATH 中查找可执行文件（Windows，不区分大小写）。</summary>
+    private static string? FindOnPath(string fileName)
+    {
+        var pathEnv = Environment.GetEnvironmentVariable("PATH");
+        if (string.IsNullOrWhiteSpace(pathEnv)) return null;
+        var extensions = (Environment.GetEnvironmentVariable("PATHEXT") ?? ".EXE;.CMD;.BAT").Split(';');
+        foreach (var dir in pathEnv.Split(Path.PathSeparator))
+        {
+            if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir)) continue;
+            var full = Path.Combine(dir.Trim(), fileName);
+            if (File.Exists(full)) return full;
+            foreach (var ext in extensions)
+            {
+                var withExt = full + ext.ToLowerInvariant();
+                if (File.Exists(withExt)) return withExt;
+            }
+        }
+        return null;
+    }
+
     /// <summary>
-    /// 查找随 OCRmyPDF 便携包内置的 Tesseract 目录（便携包根\tesseract\）。
-    /// 优先于系统安装版，确保离线自包含。
+    /// 查找 Tesseract 目录：优先便携包内置，其次系统安装版。
+    /// 需要目录中存在 tesseract.exe 才视为有效。
     /// </summary>
     private static string? FindTesseractDirectory()
     {
@@ -130,13 +170,16 @@ public static class OfflineOcrService
         var candidates = new[]
         {
             Path.Combine(appDirectory, "tools", "OCRmyPDF", "tesseract"),
-            Path.Combine(appDirectory, "tools", "OCRmyPDF-slim", "tesseract")
+            Path.Combine(appDirectory, "tools", "OCRmyPDF-slim", "tesseract"),
+            // 系统安装版（UB-Mannheim 安装器默认安装位置）
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Tesseract-OCR"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Tesseract-OCR")
         };
-        var dir = candidates.FirstOrDefault(path => Directory.Exists(path));
+        var dir = candidates.FirstOrDefault(path => File.Exists(Path.Combine(path, "tesseract.exe")));
         if (dir is not null) return dir;
-        // 回退：系统安装的 Tesseract
-        var systemTesseract = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Tesseract-OCR");
-        return Directory.Exists(systemTesseract) ? systemTesseract : null;
+        // 回退：PATH 中查找
+        var byPath = FindOnPath("tesseract.exe");
+        return byPath is null ? null : Path.GetDirectoryName(byPath);
     }
 }
 
