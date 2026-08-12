@@ -152,6 +152,8 @@ tools/
 
 `OCRmyPDF` 与 `OCRmyPDF-slim` 二选一即可，程序自动识别；两者都放时优先完整版。详情见 [tools/README.md](tools/README.md)。
 
+内网用户部署步骤与故障排查见 [内网离线部署指南](docs/内网离线部署指南.md)。
+
 ## 构建与运行
 
 ```powershell
