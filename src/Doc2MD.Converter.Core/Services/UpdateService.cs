@@ -36,15 +36,12 @@ public sealed class UpdateCheckResult
 public sealed class UpdateService
 {
     /// <summary>
-    /// 发布仓库 Owner。
-    /// 注意：此为占位值，项目开源后请改为真实 GitHub 仓库名，
-    /// 否则更新检查会请求不存在的仓库并静默跳过。
+    /// 发布仓库 Owner（GitHub 用户名/组织名）。
     /// </summary>
-    public const string RepositoryOwner = "Doc2MD-Converter";
+    public const string RepositoryOwner = "Masongmx";
 
     /// <summary>
     /// 发布仓库 Name。
-    /// 注意：此为占位值，项目开源后请改为真实 GitHub 仓库名。
     /// </summary>
     public const string RepositoryName = "Doc2MD-Converter";
 
