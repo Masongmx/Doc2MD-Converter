@@ -1,4 +1,4 @@
-using Doc2MD.Pipeline.Models;
+using Doc2MD.Models;
 
 namespace Doc2MD.Pipeline.Services;
 

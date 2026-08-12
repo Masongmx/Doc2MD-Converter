@@ -22,7 +22,7 @@ public static class OutputPackageWriter
     {
         Directory.CreateDirectory(outputDirectory);
 
-        var docName = Path.GetFileNameWithoutExtension(result.SourceFilePath ?? "output");
+        var docName = Path.GetFileNameWithoutExtension(result.Metadata.SourceFilePath ?? "output");
         // 清理文件名中的非法字符
         foreach (var c in Path.GetInvalidFileNameChars())
             docName = docName.Replace(c, '_');

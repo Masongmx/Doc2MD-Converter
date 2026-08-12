@@ -59,7 +59,15 @@
                                 <TextBlock Text="2. 添加文件或文件夹" Margin="0,0,0,10"/>
                                 <TextBlock Text="3. 选择输出目录" Margin="0,0,0,10"/>
                                 <TextBlock Text="4. 检查文件状态" Margin="0,0,0,10"/>
-                                <TextBlock Text="5. 点击生成按钮"/>
+                                <TextBlock Text="5. 点击生成按钮" Margin="0,0,0,18"/>
+
+                                <TextBlock Text="键盘快捷键" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                <TextBlock Text="Ctrl + O — 添加文件" Margin="0,0,0,6"/>
+                                <TextBlock Text="Ctrl + Shift + O — 添加文件夹" Margin="0,0,0,6"/>
+                                <TextBlock Text="F5 — 刷新当前文件夹" Margin="0,0,0,6"/>
+                                <TextBlock Text="Ctrl + Enter — 开始转换" Margin="0,0,0,6"/>
+                                <TextBlock Text="Esc — 取消处理" Margin="0,0,0,6"/>
+                                <TextBlock Text="Ctrl + Z — 撤销清空列表"/>
                             </StackPanel>
                         </Border>
 

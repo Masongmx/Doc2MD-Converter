@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Documents;
 using Doc2MD.Models;
 using Doc2MD.Pipeline.Services;
 using Doc2MD.Services;
@@ -18,6 +19,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly ConfigService _configService;
     private readonly ToastService _toastService;
     private readonly FileScanService _fileScanService;
+    private readonly ILoggingService _logger;
     private readonly Dictionary<AppMode, ObservableCollection<FileItem>> _modeFiles;
     private readonly Dictionary<AppMode, string> _modeOutputDirectories;
     private readonly Dictionary<AppMode, string?> _modeCurrentFolders;
@@ -49,11 +51,27 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _selectedSettingsSection = "通用设置";
     private string _selectedHelpSection = "使用指南";
 
+    // F2: 转换预览状态
+    private FileItem? _selectedFile;
+    private bool _isPreviewVisible;
+    private FlowDocument? _previewDocument;
+    private string _previewFileName = string.Empty;
+
     public MainViewModel()
+        : this(new ConfigService(), LoggingService.Logger, new ToastService(), new ConversionService())
     {
-        _configService = new ConfigService();
-        _conversionService = new ConversionService();
-        _toastService = new ToastService();
+    }
+
+    /// <summary>
+    /// 注入构造函数（DI 迁移 C1）。允许通过 DI 容器注入配置、日志、Toast 与转换服务，
+    /// 提升可测试性与可替换性。
+    /// </summary>
+    public MainViewModel(ConfigService configService, ILoggingService logger, ToastService toastService, ConversionService conversionService)
+    {
+        _configService = configService;
+        _logger = logger;
+        _conversionService = conversionService;
+        _toastService = toastService;
         _toastService.Changed += () =>
         {
             ToastMessage = _toastService.Message;
@@ -98,12 +116,141 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         _conversionService.FileCompleted += (_, _) => RefreshFileSummaryProperties();
+
+        // 初始化语言并订阅切换事件
+        LanguageService.SetLanguage(Settings.General.Language);
+        LanguageService.LanguageChanged += OnLanguageChanged;
+
         LoggingService.Info("主界面已初始化");
+    }
+
+    private void OnLanguageChanged()
+    {
+        // 语言切换后刷新所有依赖本地化文本的属性
+        RaiseModeDependentProperties();
+        OnPropertyChanged(nameof(PrimaryActionText));
+        OnPropertyChanged(nameof(ProcessProgressText));
+        OnPropertyChanged(nameof(CurrentActionVerb));
+        RefreshFileSummaryProperties();
+        RaiseOnboardingProperties();
+    }
+
+    private void RaiseOnboardingProperties()
+    {
+        OnPropertyChanged(nameof(OnboardingTitle));
+        OnPropertyChanged(nameof(OnboardingSubtitle));
+        OnPropertyChanged(nameof(OnboardingStep1Title));
+        OnPropertyChanged(nameof(OnboardingStep1Desc));
+        OnPropertyChanged(nameof(OnboardingStep2Title));
+        OnPropertyChanged(nameof(OnboardingStep2Desc));
+        OnPropertyChanged(nameof(OnboardingStep3Title));
+        OnPropertyChanged(nameof(OnboardingStep3Desc));
+        OnPropertyChanged(nameof(OnboardingStartText));
+        OnPropertyChanged(nameof(OnboardingSkipText));
+    }
+
+    /// <summary>
+    /// 检测配置加载状态，若配置损坏已重置则提示用户。
+    /// 由窗口 Loaded 事件调用，确保 UI 已就绪。
+    /// </summary>
+    public void NotifyIfConfigCorrupted()
+    {
+        if (_configService.WasLoadCorrupted)
+        {
+            ShowToast(LanguageService.GetString("Toast_ConfigCorrupted"), ToastType.Warning);
+        }
+    }
+
+    /// <summary>向用户展示一条成功提示（供视图层事件复用，如复制错误信息）。</summary>
+    public void ShowToastFeedback(string message)
+    {
+        ShowToast(message, ToastType.Success);
+    }
+
+    // ===== F2: 转换预览交互 =====
+
+    /// <summary>切换预览面板显示状态。预览打开时渲染当前选中文件。</summary>
+    public async Task TogglePreviewAsync()
+    {
+        if (IsPreviewVisible)
+        {
+            ClosePreview();
+            return;
+        }
+
+        IsPreviewVisible = true;
+        var file = SelectedFile;
+        if (file != null && !IsProcessing && !IsScanning)
+        {
+            await RenderPreviewAsync(file);
+        }
+        else
+        {
+            PreviewDocument = null;
+            _previewFileName = string.Empty;
+            OnPropertyChanged(nameof(PreviewPanelTitle));
+        }
+    }
+
+    /// <summary>关闭预览面板并清空渲染结果。</summary>
+    public void ClosePreview()
+    {
+        if (!IsPreviewVisible && PreviewDocument == null)
+        {
+            return;
+        }
+        IsPreviewVisible = false;
+        PreviewDocument = null;
+        _previewFileName = string.Empty;
+        OnPropertyChanged(nameof(PreviewPanelTitle));
+    }
+
+    private async Task RenderPreviewAsync(FileItem file)
+    {
+        if (file.Type != FileType.Markdown)
+        {
+            ShowToast(LanguageService.GetString("Preview_NotMarkdown"), ToastType.Warning);
+            return;
+        }
+
+        if (!File.Exists(file.FullPath))
+        {
+            ShowToast(LanguageService.GetString("Preview_FileMissing"), ToastType.Warning);
+            return;
+        }
+
+        try
+        {
+            // 文件读取与语义解析在后台线程执行；FlowDocument 必须留在 UI 线程构建
+            var markdown = await Task.Run(() => File.ReadAllText(file.FullPath));
+            var semantic = await Task.Run(() => SemanticDocumentConverter.Convert(markdown));
+            PreviewDocument = MarkdownPreviewBuilder.Build(semantic);
+            _previewFileName = file.FileName;
+            OnPropertyChanged(nameof(PreviewPanelTitle));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"预览渲染失败: {file.FullPath}", ex);
+            PreviewDocument = null;
+            _previewFileName = string.Empty;
+            OnPropertyChanged(nameof(PreviewPanelTitle));
+            ShowToast(LanguageService.GetString("Preview_RenderFailed"), ToastType.Error);
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public AppConfig Settings => _configService.Config;
+
+    /// <summary>F4: 最近转换历史记录（最近 20 条）。</summary>
+    public IReadOnlyList<ConversionRecord> RecentConversions =>
+        _configService.Config.Recent.RecentConversions;
+
+    /// <summary>True when MotionLevel is Off — all animations should be suppressed.</summary>
+    public bool IsMotionOff => Settings.Appearance.Motion == MotionLevel.Off;
+
+    /// <summary>True when MotionLevel is Smooth — enables extra polish animations.</summary>
+    public bool IsMotionSmooth => Settings.Appearance.Motion == MotionLevel.Smooth;
     public string AppVersion => Constants.AppVersion.FullString;
 
     public AppMode CurrentMode
@@ -114,6 +261,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (_currentMode == value) return;
             _currentMode = value;
             OnPropertyChanged();
+            ClosePreview();
             RaiseModeDependentProperties();
         }
     }
@@ -126,44 +274,99 @@ public sealed class MainViewModel : INotifyPropertyChanged
     };
 
     public ObservableCollection<FileItem> ActiveFiles => _modeFiles[CurrentMode];
+
+    // ===== F2: 转换预览 =====
+
+    /// <summary>文件列表中当前选中的文件（绑定 ListView.SelectedItem）。</summary>
+    public FileItem? SelectedFile
+    {
+        get => _selectedFile;
+        set
+        {
+            if (ReferenceEquals(_selectedFile, value)) return;
+            _selectedFile = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CanPreview));
+            if (_isPreviewVisible && value != null && !IsProcessing && !IsScanning)
+            {
+                _ = RenderPreviewAsync(value);
+            }
+        }
+    }
+
+    public bool IsPreviewVisible
+    {
+        get => _isPreviewVisible;
+        private set
+        {
+            if (_isPreviewVisible == value) return;
+            _isPreviewVisible = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CanClosePreview));
+        }
+    }
+
+    /// <summary>预览面板渲染出的文档（须在 UI 线程赋值）。</summary>
+    public FlowDocument? PreviewDocument
+    {
+        get => _previewDocument;
+        private set
+        {
+            if (ReferenceEquals(_previewDocument, value)) return;
+            _previewDocument = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasPreviewDocument));
+        }
+    }
+
+    public bool HasPreviewDocument => PreviewDocument != null;
+    public bool IsPreviewButtonVisible => CurrentMode == AppMode.MarkdownToDocx;
+    public bool CanClosePreview => IsPreviewVisible;
+    public bool CanPreview => IsPreviewButtonVisible && SelectedFile != null && !IsProcessing && !IsScanning;
+    public string PreviewButtonText => LanguageService.GetString("Button_Preview");
+    public string PreviewCloseText => LanguageService.GetString("Button_Close");
+    public string PreviewEmptyText => LanguageService.GetString("Preview_Empty");
+    public string PreviewPanelTitle => string.IsNullOrEmpty(_previewFileName)
+        ? LanguageService.GetString("Preview_PanelTitle")
+        : string.Format(LanguageService.CurrentCulture, "{0} - {1}", LanguageService.GetString("Preview_PanelTitle"), _previewFileName);
     public string CurrentModeTitle => CurrentMode switch
     {
-        AppMode.MarkdownToDocx => "Markdown 转 DOCX",
-        AppMode.FormatDoc => "一键排版",
-        _ => "文档转 Markdown"
+        AppMode.MarkdownToDocx => LanguageService.GetString("Mode_ToDocx_Title"),
+        AppMode.FormatDoc => LanguageService.GetString("Mode_Format_Title"),
+        _ => LanguageService.GetString("Mode_ToMarkdown_Title")
     };
     public string CurrentModeDescription => CurrentMode switch
     {
-        AppMode.MarkdownToDocx => "按照公文格式生成 Word 文档",
-        AppMode.FormatDoc => "统一字体、标题、段落与页边距",
-        _ => "支持 PDF / Word / Excel / PPT"
+        AppMode.MarkdownToDocx => LanguageService.GetString("Mode_ToDocx_Desc"),
+        AppMode.FormatDoc => LanguageService.GetString("Mode_Format_Desc"),
+        _ => LanguageService.GetString("Mode_ToMarkdown_Desc")
     };
     public string CurrentModeDetail => CurrentMode switch
     {
-        AppMode.MarkdownToDocx => "批量转换，高效稳定",
-        AppMode.FormatDoc => "规范化排版，提升文档质量",
-        _ => "本地解析，提取文本内容"
+        AppMode.MarkdownToDocx => LanguageService.GetString("Mode_ToDocx_Detail"),
+        AppMode.FormatDoc => LanguageService.GetString("Mode_Format_Detail"),
+        _ => LanguageService.GetString("Mode_ToMarkdown_Detail")
     };
     public string AddFileButtonText => CurrentMode switch
     {
-        AppMode.MarkdownToDocx => "添加 Markdown",
-        AppMode.FormatDoc => "添加 Word",
-        _ => "添加文件"
+        AppMode.MarkdownToDocx => LanguageService.GetString("Button_AddMarkdown"),
+        AppMode.FormatDoc => LanguageService.GetString("Button_AddWord"),
+        _ => LanguageService.GetString("Button_AddFiles")
     };
     public string DropZoneTitle => CurrentMode switch
     {
-        AppMode.MarkdownToDocx => "拖拽 Markdown 文件或文件夹到这里",
-        AppMode.FormatDoc => "拖拽 Word 文档或文件夹到这里",
-        _ => "拖拽文档或文件夹到这里"
+        AppMode.MarkdownToDocx => LanguageService.GetString("DropZone_ToDocx_Title"),
+        AppMode.FormatDoc => LanguageService.GetString("DropZone_Format_Title"),
+        _ => LanguageService.GetString("DropZone_ToMarkdown_Title")
     };
     public string DropZoneSubtitle => CurrentMode switch
     {
-        AppMode.MarkdownToDocx => "支持 .md / .markdown 文件",
-        AppMode.FormatDoc => "支持 .doc / .docx 文件",
-        _ => "支持 PDF / Word / Excel / PPT"
+        AppMode.MarkdownToDocx => LanguageService.GetString("DropZone_ToDocx_Subtitle"),
+        AppMode.FormatDoc => LanguageService.GetString("DropZone_Format_Subtitle"),
+        _ => LanguageService.GetString("DropZone_ToMarkdown_Subtitle")
     };
-    public string DropZoneFootnote => "也可以点击上方按钮添加";
-    public string DragActiveText => "松开以添加文件";
+    public string DropZoneFootnote => LanguageService.GetString("DropZone_Footnote");
+    public string DragActiveText => LanguageService.GetString("DropZone_DragActive");
     public double UiScale => Settings.Appearance.Scale <= 0 ? 1.0 : Settings.Appearance.Scale;
     public string ActiveOutputDirectory
     {
@@ -197,6 +400,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(CanChangeMode));
             OnPropertyChanged(nameof(CanClearFiles));
             OnPropertyChanged(nameof(CanUseFolderActions));
+            OnPropertyChanged(nameof(CanPreview));
         }
     }
     public bool IsProcessing
@@ -214,6 +418,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(CanClearFiles));
             OnPropertyChanged(nameof(CanUseFolderActions));
             OnPropertyChanged(nameof(PrimaryActionText));
+            OnPropertyChanged(nameof(CanPreview));
         }
     }
     public bool IsDragActive
@@ -260,7 +465,16 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public bool CanClearFiles => ActiveFiles.Count > 0 && !IsInteractionLocked;
     public bool CanOpenOutputDirectory => !IsInteractionLocked && Directory.Exists(GetOpenableOutputDirectory());
     public bool CanStartProcessing => !IsInteractionLocked && ActiveFiles.Any(IsRunnableFile);
-    public bool CanPrimaryAction => CanStartProcessing || (!IsInteractionLocked && PrimaryActionText == "打开输出目录" && CanOpenOutputDirectory);
+    public bool CanPrimaryAction => CanStartProcessing || (!IsInteractionLocked && IsPrimaryOpenOutputAction && CanOpenOutputDirectory);
+
+    /// <summary>主按钮当前是否为"打开输出目录"动作（用于与纯生成动作区分）。</summary>
+    public bool IsPrimaryOpenOutputAction =>
+        !IsProcessing &&
+        !IsScanning &&
+        !IsSwitchingFolder &&
+        ActiveFiles.Count > 0 &&
+        ActiveFiles.All(file => !FileScanService.IsSupportedForMode(file.FullPath, CurrentMode) || file.Status == FileStatus.Done) &&
+        ActiveFiles.Any(file => file.Status == FileStatus.Done);
     public string TaskPanelTransitionPhase
     {
         get => _taskPanelTransitionPhase;
@@ -380,28 +594,28 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (IsProcessing)
             {
-                return $"{CurrentActionVerb}：{ProcessCurrent} / {ProcessTotal}";
+                return LanguageService.GetFormatted("Progress_Processing", CurrentActionVerb, ProcessCurrent, ProcessTotal);
             }
 
             if (ProcessTotal > 0)
             {
                 if (FailedCount > 0)
                 {
-                    return $"部分失败：{DoneCount} 成功，{FailedCount} 失败";
+                    return LanguageService.GetFormatted("Progress_PartiallyFailed", DoneCount, FailedCount);
                 }
 
-                return $"已完成：{ProcessCurrent} / {ProcessTotal}";
+                return LanguageService.GetFormatted("Progress_Completed", ProcessCurrent, ProcessTotal);
             }
 
-            return "暂无任务";
+            return LanguageService.GetString("Progress_NoTasks");
         }
     }
     public string ProcessProgressPercentText => ProcessTotal <= 0 ? string.Empty : $"{Math.Round(ProcessProgressPercent):0}%";
     public string CurrentActionVerb => CurrentMode switch
     {
-        AppMode.MarkdownToDocx => "正在生成 DOCX",
-        AppMode.FormatDoc => "正在排版",
-        _ => "正在生成 Markdown"
+        AppMode.MarkdownToDocx => LanguageService.GetString("Action_Verb_ToDocx"),
+        AppMode.FormatDoc => LanguageService.GetString("Action_Verb_Format"),
+        _ => LanguageService.GetString("Action_Verb_ToMarkdown")
     };
     public string PrimaryActionText
     {
@@ -409,21 +623,29 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (IsProcessing)
             {
-                return $"正在处理 {ProcessCurrent} / {ProcessTotal}";
+                return LanguageService.GetFormatted("Progress_Processing", " ", ProcessCurrent, ProcessTotal).Trim();
+            }
+
+            // 存在失败项且没有真正待处理的新任务时：主按钮变为"重试失败"
+            var failedCount = FailedCount;
+            var hasPendingNew = PendingCount > 0;
+            if (!hasPendingNew && failedCount > 0)
+            {
+                return LanguageService.GetFormatted("Button_RetryFailed", failedCount);
             }
 
             if (ActiveFiles.Count > 0 &&
                 ActiveFiles.All(file => !FileScanService.IsSupportedForMode(file.FullPath, CurrentMode) || file.Status == FileStatus.Done) &&
                 ActiveFiles.Any(file => file.Status == FileStatus.Done))
             {
-                return "打开输出目录";
+                return LanguageService.GetString("Button_OpenOutputDir");
             }
 
             return CurrentMode switch
             {
-                AppMode.MarkdownToDocx => "生成 DOCX",
-                AppMode.FormatDoc => "开始排版",
-                _ => "生成 Markdown"
+                AppMode.MarkdownToDocx => LanguageService.GetString("Button_GenerateDocx"),
+                AppMode.FormatDoc => LanguageService.GetString("Button_StartFormat"),
+                _ => LanguageService.GetString("Button_GenerateMarkdown")
             };
         }
     }
@@ -433,12 +655,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (HasCurrentFolder)
             {
-                return $"当前文件夹：{CurrentFolder}    共 {ScanFound} 个文件，其中 {ScanSupported} 个可处理";
+                return LanguageService.GetFormatted("FolderSummary_Current", CurrentFolder ?? string.Empty, ScanFound, ScanSupported);
             }
 
             return ActiveFiles.Count == 0
                 ? string.Empty
-                : $"已添加 {ActiveFiles.Count} 个文件";
+                : LanguageService.GetFormatted("FolderSummary_Added", ActiveFiles.Count);
         }
     }
     public bool HasCurrentFolderSummary => HasCurrentFolder || ActiveFiles.Count > 0;
@@ -498,11 +720,35 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>首次启动时是否显示新手引导浮层（P1）。</summary>
+    public bool ShowOnboarding => !Settings.General.HasCompletedOnboarding;
+
+    // ==== 新手引导本地化文本（P1） ====
+    public string OnboardingTitle => LanguageService.GetString("Onboarding_Title");
+    public string OnboardingSubtitle => LanguageService.GetString("Onboarding_Subtitle");
+    public string OnboardingStep1Title => LanguageService.GetString("Onboarding_Step1_Title");
+    public string OnboardingStep1Desc => LanguageService.GetString("Onboarding_Step1_Desc");
+    public string OnboardingStep2Title => LanguageService.GetString("Onboarding_Step2_Title");
+    public string OnboardingStep2Desc => LanguageService.GetString("Onboarding_Step2_Desc");
+    public string OnboardingStep3Title => LanguageService.GetString("Onboarding_Step3_Title");
+    public string OnboardingStep3Desc => LanguageService.GetString("Onboarding_Step3_Desc");
+    public string OnboardingStartText => LanguageService.GetString("Onboarding_Start");
+    public string OnboardingSkipText => LanguageService.GetString("Onboarding_Skip");
+
+    /// <summary>完成新手引导，持久化标记并关闭浮层。</summary>
+    public void CompleteOnboarding()
+    {
+        if (Settings.General.HasCompletedOnboarding) return;
+        Settings.General.HasCompletedOnboarding = true;
+        _configService.Save();
+        OnPropertyChanged(nameof(ShowOnboarding));
+    }
+
     public async Task SwitchModeAsync(AppMode mode)
     {
         if (CurrentMode == mode || IsInteractionLocked) return;
 
-        LoggingService.Info($"切换模式: {CurrentMode} -> {mode}");
+        _logger.Info($"切换模式: {CurrentMode} -> {mode}");
         IsModeTransitioning = true;
 
         await AnimateTaskPanelOutAsync();
@@ -526,14 +772,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public async Task BrowseFilesAsync()
     {
+        var allFiles = LanguageService.GetString("Filter_AllFiles");
         var dialog = new OpenFileDialog
         {
             Multiselect = true,
             Filter = CurrentMode switch
             {
-                AppMode.MarkdownToDocx => "Markdown 文件|*.md;*.markdown|所有文件|*.*",
-                AppMode.FormatDoc => "Word 文档|*.doc;*.docx|所有文件|*.*",
-                _ => "支持的文档|*.pdf;*.doc;*.docx;*.xls;*.xlsx;*.ppt;*.pptx|所有文件|*.*"
+                AppMode.MarkdownToDocx => $"{LanguageService.GetString("Filter_Markdown")}|*.md;*.markdown|{allFiles}|*.*",
+                AppMode.FormatDoc => $"{LanguageService.GetString("Filter_Word")}|*.doc;*.docx|{allFiles}|*.*",
+                _ => $"{LanguageService.GetString("Filter_SupportedDocs")}|*.pdf;*.doc;*.docx;*.xls;*.xlsx;*.ppt;*.pptx|{allFiles}|*.*"
             }
         };
 
@@ -547,7 +794,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         var dialog = new OpenFolderDialog
         {
-            Title = "选择文件夹"
+            Title = LanguageService.GetString("Dialog_FolderTitle")
         };
 
         if (dialog.ShowDialog() == true)
@@ -573,6 +820,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         var added = new List<FileItem>();
         var skipped = 0;
         var unsupported = 0;
+        var legacyCount = 0;
 
         foreach (var path in candidates)
         {
@@ -587,6 +835,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
             {
                 item.Status = FileStatus.Pending;
                 added.Add(item);
+
+                // 检测旧格式文件（.doc/.xls/.ppt），需要 LibreOffice 兜底
+                if (LegacyOfficeConverter.IsLegacyOfficeFormat(item.Extension))
+                {
+                    legacyCount++;
+                }
             }
             else
             {
@@ -601,48 +855,148 @@ public sealed class MainViewModel : INotifyPropertyChanged
             ActiveFiles.Add(item);
         }
 
-        StatusText = added.Count > 0 ? $"已添加 {added.Count} 个文件" : "未添加新文件";
+        StatusText = added.Count > 0 ? LanguageService.GetFormatted("Add_StatusAdded", added.Count) : LanguageService.GetString("Status_NoNewFiles");
         StatusTone = unsupported > 0 ? "warning" : "success";
-        LoggingService.Info($"手动添加文件: {added.Count}，跳过重复: {skipped}，不支持: {unsupported}");
+        _logger.Info($"手动添加文件: {added.Count}，跳过重复: {skipped}，不支持: {unsupported}");
 
         if (added.Count > 0)
         {
-            ShowToast($"已添加 {added.Count} 个文件", unsupported > 0 ? ToastType.Warning : ToastType.Success);
+            ShowToast(LanguageService.GetFormatted("Toast_AddedFiles", added.Count), unsupported > 0 ? ToastType.Warning : ToastType.Success);
         }
 
         if (skipped > 0)
         {
-            ShowToast($"已跳过 {skipped} 个重复文件", ToastType.Info);
+            ShowToast(LanguageService.GetFormatted("Toast_SkippedDuplicates", skipped), ToastType.Info);
         }
 
         if (unsupported > 0)
         {
-            ShowToast($"已保留 {unsupported} 个不支持的文件", ToastType.Warning);
+            ShowToast(LanguageService.GetFormatted("Toast_UnsupportedRetained", unsupported), ToastType.Warning);
+        }
+
+        // 检测到旧格式文件但未安装 LibreOffice 时警告用户
+        if (legacyCount > 0 && !LegacyOfficeConverter.IsLibreOfficeAvailable())
+        {
+            ShowToast(LanguageService.GetFormatted("Toast_LegacyNeedLibreOffice", legacyCount), ToastType.Warning);
         }
 
         RefreshFileSummaryProperties();
     }
+
+    // F5/P4: 清空前的快照与 3 秒撤销窗口，供 Ctrl+Z 或 Toast 撤销按钮恢复
+    private List<FileItem>? _clearSnapshot;
+    private CancellationTokenSource? _undoCts;
+
+    /// <summary>P4: 是否处于 3 秒撤销窗口内（快照未过期）。</summary>
+    public bool CanUndoClear => _clearSnapshot is { Count: > 0 };
 
     public void ClearFiles()
     {
         if (ActiveFiles.Count == 0) return;
 
+        // P4: 保存快照并打开 3 秒撤销窗口
+        _clearSnapshot = new List<FileItem>(ActiveFiles);
+        OnPropertyChanged(nameof(CanUndoClear));
+        StartUndoWindow();
+
+        var cleared = ActiveFiles.Count;
         ActiveFiles.Clear();
         _modeCurrentFolders[CurrentMode] = null;
         ScanFound = 0;
         ScanSupported = 0;
-        StatusText = "文件列表已清空";
+        StatusText = LanguageService.GetString("Status_ListCleared");
         StatusTone = "success";
         LoggingService.Info($"清空文件列表: {CurrentMode}");
-        ShowToast("已清空文件列表", ToastType.Info);
+        ShowToast(LanguageService.GetFormatted("Toast_ListClearedUndo", cleared), ToastType.Info);
         RefreshFileSummaryProperties();
+    }
+
+    /// <summary>F5: 撤销最近一次清空文件列表操作（Ctrl+Z 或 Toast 撤销按钮）。</summary>
+    public void UndoClearFiles()
+    {
+        if (_clearSnapshot == null || _clearSnapshot.Count == 0)
+        {
+            ShowToast(LanguageService.GetString("Toast_NothingToUndo"), ToastType.Info);
+            return;
+        }
+
+        _undoCts?.Cancel();
+        var restored = _clearSnapshot;
+        _clearSnapshot = null;
+        OnPropertyChanged(nameof(CanUndoClear));
+
+        foreach (var item in restored)
+        {
+            ActiveFiles.Add(item);
+        }
+        StatusText = LanguageService.GetString("Status_ListRestored");
+        StatusTone = "success";
+        LoggingService.Info($"已撤销清空文件列表: {CurrentMode}");
+        ShowToast(LanguageService.GetString("Toast_ListRestored"), ToastType.Success);
+        RefreshFileSummaryProperties();
+    }
+
+    /// <summary>P4: 3 秒后自动关闭撤销窗口，防止误操作无限期撤销。</summary>
+    private void StartUndoWindow()
+    {
+        _undoCts?.Cancel();
+        _undoCts?.Dispose();
+        _undoCts = new CancellationTokenSource();
+        var token = _undoCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(3000, token);
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    if (token.IsCancellationRequested) return;
+                    _clearSnapshot = null;
+                    OnPropertyChanged(nameof(CanUndoClear));
+                });
+            }
+            catch (OperationCanceledException)
+            {
+                // 已撤销或再次清空时主动取消，忽略
+            }
+        }, token);
     }
 
     public void RemoveFile(FileItem item)
     {
         ActiveFiles.Remove(item);
-        LoggingService.Info($"移除文件: {item.FullPath}");
+        _logger.Info($"移除文件: {item.FullPath}");
         RefreshFileSummaryProperties();
+    }
+
+    // P5: 文件列表是否有选中项（驱动「移除选中」按钮显隐）
+    private bool _hasSelection;
+
+    public bool HasSelection
+    {
+        get => _hasSelection;
+        set
+        {
+            if (_hasSelection == value) return;
+            _hasSelection = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>P5: 批量移除选中的文件（ListView SelectionMode=Extended 多选）。</summary>
+    public void RemoveSelectedFiles(IReadOnlyCollection<FileItem> items)
+    {
+        if (items == null || items.Count == 0) return;
+
+        foreach (var item in items)
+        {
+            ActiveFiles.Remove(item);
+        }
+        _logger.Info($"批量移除 {items.Count} 个文件");
+        ShowToast(LanguageService.GetFormatted("Toast_RemovedFiles", items.Count), ToastType.Info);
+        RefreshFileSummaryProperties();
+        OnPropertyChanged(nameof(SelectedFile));
     }
 
     public async Task HandleFileActionAsync(FileItem item)
@@ -650,7 +1004,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
         switch (item.Status)
         {
             case FileStatus.Done:
-                OpenPath(item.OutputPath ?? item.Directory);
+                // 成功项：优先打开输出文件，否则打开所在目录
+                if (!string.IsNullOrWhiteSpace(item.OutputPath))
+                {
+                    OpenPath(item.OutputPath);
+                }
+                else
+                {
+                    OpenPath(item.Directory);
+                }
                 break;
             case FileStatus.Processing:
                 CancelProcessing();
@@ -658,7 +1020,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             case FileStatus.Failed:
                 item.Status = FileStatus.Pending;
                 item.ErrorMessage = null;
-                ShowToast($"已将 {item.FileName} 标记为重试", ToastType.Info);
+                ShowToast(LanguageService.GetFormatted("Toast_MarkedForRetry", item.FileName), ToastType.Info);
                 RefreshFileSummaryProperties();
                 break;
             case FileStatus.Unsupported:
@@ -671,9 +1033,27 @@ public sealed class MainViewModel : INotifyPropertyChanged
         await Task.CompletedTask;
     }
 
+    /// <summary>复制指定文件项的输出路径（F3：输出管理快捷入口）。</summary>
+    public void CopyOutputPath(FileItem item)
+    {
+        var path = !string.IsNullOrWhiteSpace(item.OutputPath) ? item.OutputPath : item.FullPath;
+        if (string.IsNullOrWhiteSpace(path)) return;
+
+        try
+        {
+            System.Windows.Clipboard.SetText(path);
+            ShowToast(LanguageService.GetString("Toast_CopiedOutputPath"), ToastType.Success);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"复制输出路径失败: {ex.Message}");
+            ShowToast(LanguageService.GetString("Toast_CopyFailed"), ToastType.Error);
+        }
+    }
+
     public async Task StartProcessingAsync()
     {
-        if (!IsProcessing && PrimaryActionText == "打开输出目录" && CanOpenOutputDirectory && !CanStartProcessing)
+        if (!IsProcessing && IsPrimaryOpenOutputAction && CanOpenOutputDirectory && !CanStartProcessing)
         {
             OpenOutputDirectory();
             return;
@@ -691,7 +1071,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         if (runnableFiles.Count == 0)
         {
-            ShowToast("没有可处理的文件", ToastType.Warning);
+            ShowToast(LanguageService.GetString("Toast_NoProcessableFiles"), ToastType.Warning);
             return;
         }
 
@@ -707,9 +1087,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
         ProcessCurrent = 0;
         ProcessTotal = runnableFiles.Count;
         IsProcessing = true;
-        StatusText = "正在生成";
+        StatusText = LanguageService.GetString("Status_Generating");
         StatusTone = "info";
-        LoggingService.Info($"开始处理任务: 模式={CurrentMode}, 文件数={runnableFiles.Count}, 输出目录={outputDirectory}");
+        _logger.Info($"开始处理任务: 模式={CurrentMode}, 文件数={runnableFiles.Count}, 输出目录={outputDirectory}");
 
         _processCts?.Cancel();
         _processCts?.Dispose();
@@ -758,7 +1138,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
         catch (OperationCanceledException)
         {
-            StatusText = failedPaths.Count > 0 ? "处理已中断" : "已取消";
+            StatusText = failedPaths.Count > 0 ? LanguageService.GetString("Status_Interrupted") : LanguageService.GetString("Status_Cancelled");
             StatusTone = failedPaths.Count > 0 ? "warning" : "info";
         }
         finally
@@ -772,15 +1152,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
         var failedCount = ActiveFiles.Count(file => file.Status == FileStatus.Failed);
         if (failedCount > 0)
         {
-            StatusText = "部分失败";
+            StatusText = LanguageService.GetString("Status_PartiallyFailed");
             StatusTone = "warning";
-            ShowToast("部分文件转换失败，请查看任务列表", ToastType.Error);
+            ShowToast(LanguageService.GetString("Toast_PartiallyFailed"), ToastType.Error);
         }
         else if (ActiveFiles.Any(file => file.Status == FileStatus.Done))
         {
-            StatusText = "生成完成";
+            StatusText = LanguageService.GetString("Status_Generated");
             StatusTone = "success";
-            ShowToast("转换完成，已保存到输出目录", ToastType.Success);
+            ShowToast(LanguageService.GetString("Toast_ConversionDone"), ToastType.Success);
 
             if (Settings.General.AutoOpenOutputDir)
             {
@@ -789,7 +1169,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
         else
         {
-            StatusText = "已取消";
+            StatusText = LanguageService.GetString("Status_Cancelled");
             StatusTone = "info";
         }
     }
@@ -799,9 +1179,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
         if (IsProcessing)
         {
             _processCts?.Cancel();
-            StatusText = "正在取消...";
+            StatusText = LanguageService.GetString("Status_Cancelling");
             StatusTone = "info";
-            LoggingService.Warning("用户取消当前处理任务");
+            _logger.Warning("用户取消当前处理任务");
         }
 
         if (IsScanning)
@@ -810,9 +1190,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
             IsScanning = false;
             IsSwitchingFolder = false;
             FileListTransitionPhase = "steady";
-            StatusText = "已取消扫描";
+            StatusText = LanguageService.GetString("Status_ScanCancelled");
             StatusTone = "warning";
-            LoggingService.Warning("用户取消文件夹扫描");
+            _logger.Warning("用户取消文件夹扫描");
         }
     }
 
@@ -820,14 +1200,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         var dialog = new OpenFolderDialog
         {
-            Title = "选择输出目录"
+            Title = LanguageService.GetString("Dialog_OutputDirTitle")
         };
 
         if (dialog.ShowDialog() == true)
         {
             ActiveOutputDirectory = dialog.FolderName;
             _configService.RememberRecentOutputDirectory(dialog.FolderName);
-            ShowToast("输出目录已更新", ToastType.Success);
+            ShowToast(LanguageService.GetString("Toast_OutputDirUpdated"), ToastType.Success);
         }
     }
 
@@ -852,12 +1232,16 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public void CopySoftwareInfo()
     {
-        var info = $"Doc2MD Converter {AppVersion}{Environment.NewLine}本地离线运行{Environment.NewLine}日志目录：{AppPaths.LogDirectory}";
+        var info = LanguageService.GetFormatted(
+            "SoftwareInfo_Template",
+            AppVersion,
+            Environment.NewLine,
+            AppPaths.LogDirectory);
         Clipboard.SetText(info);
-        ShowToast("已复制软件信息", ToastType.Success);
+        ShowToast(LanguageService.GetString("Toast_CopySoftwareInfo"), ToastType.Success);
     }
 
-    public void PersistSettings(string successMessage = "设置已保存")
+    public void PersistSettings(string? successMessage = null)
     {
         _configService.Save();
         _modeOutputDirectories[AppMode.ToMarkdown] = string.IsNullOrWhiteSpace(_modeOutputDirectories[AppMode.ToMarkdown])
@@ -874,10 +1258,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
             app.ApplyAppearanceSettings(Settings.Appearance);
         }
 
-        LoggingService.Info("设置已保存");
-        ShowToast(successMessage, ToastType.Success);
+        // 同步语言设置到 LanguageService（仅当语言已变更时触发刷新）
+        LanguageService.SetLanguage(Settings.General.Language);
+
+        _logger.Info("设置已保存");
+        ShowToast(successMessage ?? LanguageService.GetString("Toast_SettingsSaved"), ToastType.Success);
         OnPropertyChanged(nameof(Settings));
         OnPropertyChanged(nameof(UiScale));
+        OnPropertyChanged(nameof(IsMotionOff));
+        OnPropertyChanged(nameof(IsMotionSmooth));
         RaiseModeDependentProperties();
     }
 
@@ -894,9 +1283,65 @@ public sealed class MainViewModel : INotifyPropertyChanged
         RaiseModeDependentProperties();
     }
 
-    public void CheckForUpdates()
+    // F6: 更新检查互斥锁，防止重复点击并发请求
+    private bool _isCheckingForUpdate;
+
+    /// <summary>F6: 轮询 GitHub Releases API 检查新版本；有新版本时询问并跳转下载页。</summary>
+    public async void CheckForUpdates()
     {
-        ShowToast("当前版本暂不支持自动更新", ToastType.Info);
+        if (_isCheckingForUpdate) return;
+        _isCheckingForUpdate = true;
+
+        try
+        {
+            ShowToast(LanguageService.GetString("Toast_CheckingUpdate"), ToastType.Info);
+            var result = await Task.Run(() => new UpdateService().CheckForUpdateAsync());
+
+            if (!result.Succeeded)
+            {
+                ShowToast(LanguageService.GetString("Toast_UpdateCheckFailed"), ToastType.Error);
+                return;
+            }
+
+            if (!result.IsUpdateAvailable)
+            {
+                var message = LanguageService.GetFormatted("Toast_UpToDate", result.LatestVersion);
+                ShowToast(message, ToastType.Success);
+                return;
+            }
+
+            // 有新版本：询问是否跳转下载（优先直链，其次 Release 页）
+            var targetUrl = !string.IsNullOrWhiteSpace(result.DownloadUrl)
+                ? result.DownloadUrl
+                : result.ReleaseUrl;
+            var dialog = LanguageService.GetFormatted(
+                "Dialog_UpdateAvailable",
+                result.LatestVersion,
+                result.CurrentVersion,
+                targetUrl);
+
+            if (MessageBox.Show(
+                    dialog,
+                    LanguageService.GetString("Dialog_UpdateTitle"),
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Information) == MessageBoxResult.Yes)
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = targetUrl,
+                    UseShellExecute = true
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("[Update] 检查更新异常", ex);
+            ShowToast(LanguageService.GetString("Toast_UpdateCheckFailed"), ToastType.Error);
+        }
+        finally
+        {
+            _isCheckingForUpdate = false;
+        }
     }
 
     private async Task RunSingleFileAsync(
@@ -911,16 +1356,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
             file.ErrorMessage = null;
         });
 
+        ConversionResult? result = null;
         switch (CurrentMode)
         {
             case AppMode.FormatDoc:
-                await RunFormattingAsync(file, outputDirectory, cancellationToken);
+                result = await RunFormattingAsync(file, outputDirectory, cancellationToken);
                 break;
             case AppMode.MarkdownToDocx:
-                await RunPipelineMd2DocxAsync(file, outputDirectory, inputRoot, cancellationToken);
+                result = await RunPipelineMd2DocxAsync(file, outputDirectory, inputRoot, cancellationToken);
                 break;
             default:
-                await _conversionService.ConvertFileAsync(
+                result = await _conversionService.ConvertFileAsync(
                     file,
                     outputDirectory,
                     Settings.Conversion.PreserveFolderStructure,
@@ -930,9 +1376,33 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     cancellationToken);
                 break;
         }
+
+        RecordConversion(file, result);
     }
 
-    private async Task RunFormattingAsync(FileItem file, string outputDirectory, CancellationToken cancellationToken)
+    /// <summary>F4: 转换完成后写入历史记录（仅记录完成或失败的终态）。</summary>
+    private void RecordConversion(FileItem file, ConversionResult? result)
+    {
+        if (file.Status != FileStatus.Done && file.Status != FileStatus.Failed)
+        {
+            return;
+        }
+
+        _configService.RememberConversion(new ConversionRecord
+        {
+            Timestamp = DateTime.Now,
+            SourceFilePath = file.FullPath,
+            SourceFileName = file.FileName,
+            OutputPath = file.OutputPath ?? string.Empty,
+            Success = file.Status == FileStatus.Done,
+            ErrorMessage = file.ErrorMessage ?? string.Empty,
+            QualityScore = result?.Quality.QualityScore ?? 0,
+            Mode = CurrentMode.ToString()
+        });
+        OnPropertyChanged(nameof(RecentConversions));
+    }
+
+    private async Task<ConversionResult?> RunFormattingAsync(FileItem file, string outputDirectory, CancellationToken cancellationToken)
     {
         try
         {
@@ -945,13 +1415,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 file.ErrorMessage = null;
                 file.OutputPath = result.OutputPath;
                 LoggingService.Info($"[Formatting] 完成: {file.FullPath}");
+                return result;
             }
-            else
-            {
-                file.Status = FileStatus.Failed;
-                file.ErrorMessage = result.ErrorMessage;
-                LoggingService.Warning($"[Formatting] 失败: {file.FullPath} - {result.ErrorMessage}");
-            }
+
+            file.Status = FileStatus.Failed;
+            file.ErrorMessage = result.ErrorMessage;
+            LoggingService.Warning($"[Formatting] 失败: {file.FullPath} - {result.ErrorMessage}");
+            return new ConversionResult { Success = false, ErrorMessage = result.ErrorMessage };
         }
         catch (OperationCanceledException)
         {
@@ -963,11 +1433,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             file.Status = FileStatus.Failed;
             file.ErrorMessage = ex.Message;
-            LoggingService.Error($"[Formatting] 异常: {file.FullPath}", ex);
+            _logger.Error($"[Formatting] 异常: {file.FullPath}", ex);
+            return new ConversionResult { Success = false, ErrorMessage = ex.Message };
         }
     }
 
-    private async Task RunPipelineMd2DocxAsync(FileItem file, string outputDirectory, string? inputRoot, CancellationToken cancellationToken)
+    private async Task<ConversionResult?> RunPipelineMd2DocxAsync(FileItem file, string outputDirectory, string? inputRoot, CancellationToken cancellationToken)
     {
         try
         {
@@ -1018,13 +1489,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 file.ErrorMessage = null;
                 file.OutputPath = result.OutputPath;
                 LoggingService.Info($"[Pipeline md2docx] 完成: {file.FullPath} -> {result.OutputPath}");
+                return new ConversionResult { Success = true, OutputPath = result.OutputPath };
             }
-            else
-            {
-                file.Status = FileStatus.Failed;
-                file.ErrorMessage = result.ErrorMessage;
-                LoggingService.Warning($"[Pipeline md2docx] 失败: {file.FullPath} - {result.ErrorMessage}");
-            }
+
+            file.Status = FileStatus.Failed;
+            file.ErrorMessage = result.ErrorMessage;
+            LoggingService.Warning($"[Pipeline md2docx] 失败: {file.FullPath} - {result.ErrorMessage}");
+            return new ConversionResult { Success = false, ErrorMessage = result.ErrorMessage };
         }
         catch (OperationCanceledException)
         {
@@ -1037,6 +1508,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             file.Status = FileStatus.Failed;
             file.ErrorMessage = ex.Message;
             LoggingService.Error($"[Pipeline md2docx] 异常: {file.FullPath}", ex);
+            return new ConversionResult { Success = false, ErrorMessage = ex.Message };
         }
     }
 
@@ -1044,7 +1516,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         if (!Directory.Exists(folderPath))
         {
-            ShowToast("所选文件夹不存在", ToastType.Error);
+            ShowToast(LanguageService.GetString("Toast_FolderNotExist"), ToastType.Error);
             return;
         }
 
@@ -1055,15 +1527,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
         var scanVersion = ++_scanVersion;
 
         IsSwitchingFolder = true;
-        StatusText = isRefresh ? "正在刷新文件夹..." : "正在切换文件夹...";
+        StatusText = isRefresh ? LanguageService.GetString("Scan_StatusRefreshing") : LanguageService.GetString("Scan_StatusSwitching");
         StatusTone = "info";
 
         await AnimateFileListOutAsync();
 
         FileListTransitionPhase = "scanning";
         IsScanning = true;
-        ScanStatusPrimary = "正在扫描文件夹...";
-        ScanStatusSecondary = $"正在识别{CurrentModeFileLabel}和子目录";
+        ScanStatusPrimary = LanguageService.GetString("Scan_PrimaryScanning");
+        ScanStatusSecondary = LanguageService.GetString("Scan_SecondaryDefault");
         ScanFound = 0;
         ScanSupported = 0;
 
@@ -1072,7 +1544,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             ScanFound = info.Found;
             ScanSupported = info.Supported;
-            ScanStatusSecondary = $"已发现 {info.Found} 个文件，其中 {info.Supported} 个可处理";
+            ScanStatusSecondary = LanguageService.GetFormatted("Scan_SecondaryProgress", info.Found, info.Supported);
         });
 
         FileScanService.FolderScanResult result;
@@ -1087,9 +1559,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
         catch (Exception ex)
         {
             LoggingService.Error($"扫描文件夹失败: {folderPath}", ex);
-            StatusText = "扫描失败";
+            StatusText = LanguageService.GetString("Status_ScanFailed");
             StatusTone = "error";
-            ShowToast("扫描文件夹失败，请查看日志", ToastType.Error);
+            ShowToast(LanguageService.GetString("Toast_ScanFailed"), ToastType.Error);
             IsScanning = false;
             IsSwitchingFolder = false;
             FileListTransitionPhase = "steady";
@@ -1118,15 +1590,29 @@ public sealed class MainViewModel : INotifyPropertyChanged
         await AnimateFileListInAsync();
         IsSwitchingFolder = false;
 
-        var loadedMessage = $"已加载 {result.Supported} 个{CurrentModeFileLabel}";
+        var loadedMessage = LanguageService.GetFormatted("Scan_LoadedMessage", result.Supported, CurrentModeFileLabel);
         StatusText = loadedMessage;
         StatusTone = result.Unsupported > 0 ? "warning" : "success";
-        LoggingService.Info($"扫描完成: {folderPath}, 总数={result.Found}, 可处理={result.Supported}, 不支持={result.Unsupported}");
+        _logger.Info($"扫描完成: {folderPath}, 总数={result.Found}, 可处理={result.Supported}, 不支持={result.Unsupported}");
 
         ShowToast(loadedMessage, ToastType.Success);
-        if (result.Unsupported > 0)
+        if (result.Truncated)
         {
-            ShowToast($"已忽略 {result.Unsupported} 个不支持的文件", ToastType.Warning);
+            // R3: 达到扫描上限时明确告知用户，避免误以为漏文件
+            var truncateMessage = LanguageService.GetFormatted("Scan_Truncated", result.Found, result.Supported);
+            StatusText = truncateMessage;
+            StatusTone = "warning";
+            ShowToast(truncateMessage, ToastType.Warning);
+        }
+        else if (result.Unsupported > 0)
+        {
+            ShowToast(LanguageService.GetFormatted("Scan_IgnoredUnsupported", result.Unsupported), ToastType.Warning);
+        }
+
+        // 文件夹内包含旧格式文件且未安装 LibreOffice 时提示
+        if (result.Files.Any(f => LegacyOfficeConverter.IsLegacyOfficeFormat(f.Extension)) && !LegacyOfficeConverter.IsLibreOfficeAvailable())
+        {
+            ShowToast(LanguageService.GetString("Toast_FolderLegacyNeedLibreOffice"), ToastType.Warning);
         }
 
         RefreshFileSummaryProperties();
@@ -1158,7 +1644,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         if (string.IsNullOrWhiteSpace(fallback))
         {
-            ShowToast("请选择输出目录，默认使用源文件所在目录", ToastType.Warning);
+            ShowToast(LanguageService.GetString("Toast_SelectOutputDir"), ToastType.Warning);
             return null;
         }
 
@@ -1173,8 +1659,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         var shouldCreate = !allowPrompt || MessageBox.Show(
-            $"输出目录不存在，是否创建？{Environment.NewLine}{directory}",
-            "创建输出目录",
+            $"{LanguageService.GetString("Dialog_OutputDirNotExist")}{Environment.NewLine}{directory}",
+            LanguageService.GetString("Dialog_CreateOutputDir"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Question) == MessageBoxResult.Yes;
 
@@ -1184,7 +1670,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         Directory.CreateDirectory(directory);
-        ShowToast("输出目录不存在，已自动创建", ToastType.Success);
+        ShowToast(LanguageService.GetString("Toast_OutputDirCreated"), ToastType.Success);
         return directory;
     }
 
@@ -1296,8 +1782,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            LoggingService.Error($"打开路径失败: {path}", ex);
-            ShowToast("打开路径失败，请查看日志", ToastType.Error);
+            _logger.Error($"打开路径失败: {path}", ex);
+            ShowToast(LanguageService.GetString("Toast_OpenPathFailed"), ToastType.Error);
         }
     }
 
@@ -1380,6 +1866,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(ProcessProgressMaximum));
         OnPropertyChanged(nameof(ProcessProgressText));
         OnPropertyChanged(nameof(ProcessProgressPercentText));
+        OnPropertyChanged(nameof(IsPreviewButtonVisible));
+        OnPropertyChanged(nameof(PreviewButtonText));
+        OnPropertyChanged(nameof(PreviewPanelTitle));
+        OnPropertyChanged(nameof(PreviewEmptyText));
+        OnPropertyChanged(nameof(CanPreview));
         RefreshFileSummaryProperties();
     }
 
@@ -1441,9 +1932,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private string CurrentModeFileLabel => CurrentMode switch
     {
-        AppMode.MarkdownToDocx => "Markdown 文件",
-        AppMode.FormatDoc => "Word 文件",
-        _ => "文档"
+        AppMode.MarkdownToDocx => LanguageService.GetString("FileLabel_Markdown"),
+        AppMode.FormatDoc => LanguageService.GetString("FileLabel_Word"),
+        _ => LanguageService.GetString("FileLabel_Document")
     };
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)

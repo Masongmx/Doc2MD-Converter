@@ -1,6 +1,7 @@
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using Doc2MD.Models;
 using Doc2MD.Pipeline.Models;
 
 namespace Doc2MD.Pipeline.Services;

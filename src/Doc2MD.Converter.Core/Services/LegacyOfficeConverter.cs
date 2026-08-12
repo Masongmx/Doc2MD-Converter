@@ -106,6 +106,21 @@ public static class LegacyOfficeConverter
         return candidates.FirstOrDefault(path => !string.IsNullOrWhiteSpace(path) && File.Exists(path));
     }
 
+    /// <summary>
+    /// 检测旧式二进制 Office 格式（.doc/.xls/.ppt）转换所需的兜底工具是否可用。
+    /// 结果供 UI 层在设置页展示状态或添加旧格式文件时提示用户。
+    /// </summary>
+    public static bool IsLibreOfficeAvailable()
+    {
+        return FindLibreOffice() != null;
+    }
+
+    /// <summary>判断给定扩展名是否为需要 LibreOffice/Office COM 兜底的旧式二进制格式。</summary>
+    public static bool IsLegacyOfficeFormat(string? extension)
+    {
+        return extension?.ToLowerInvariant() is ".doc" or ".xls" or ".ppt";
+    }
+
     private static void TryDelete(string directory)
     {
         try

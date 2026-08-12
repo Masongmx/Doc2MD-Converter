@@ -81,13 +81,50 @@ public class FileStatusActionTextConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value switch
     {
-        FileStatus.Done => "打开",
+        FileStatus.Done => "打开位置",
         FileStatus.Processing => "取消",
         FileStatus.Failed => "重试",
         FileStatus.Unsupported => "移除",
         FileStatus.Skipped => "移除",
         _ => "删除"
     };
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// F3: 路径列显示。成功转换的项优先显示输出路径，否则显示源文件路径。
+/// </summary>
+public class OutputPathDisplayConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        // value 绑定为 FileItem 本身，从 OutputPath 优先取
+        if (value is FileItem item)
+        {
+            return string.IsNullOrWhiteSpace(item.OutputPath) ? item.FullPath : item.OutputPath;
+        }
+        return value ?? string.Empty;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// F3: 成功项的输出路径列可复制（为非空 OutputPath 显示可见性）。
+/// </summary>
+public class HasOutputPathVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return !string.IsNullOrWhiteSpace(value as string) ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {

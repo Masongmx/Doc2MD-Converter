@@ -1,3 +1,5 @@
+using Doc2MD.Models;
+
 namespace Doc2MD.Pipeline.Models;
 
 /// <summary>

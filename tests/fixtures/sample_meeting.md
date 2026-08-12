@@ -1,14 +1,3 @@
----
-AIGC:
-  ContentProducer: '001191110102MAD55U9H0F10002'
-  ContentPropagator: '001191110102MAD55U9H0F10002'
-  Label: '1'
-  ProduceID: '95b6e2ae-5620-4fe1-9de7-84ff2784a577'
-  PropagateID: '95b6e2ae-5620-4fe1-9de7-84ff2784a577'
-  ReservedCode1: '9b77a796-4b25-4e0d-9651-74ccf04b92dd'
-  ReservedCode2: '9b77a796-4b25-4e0d-9651-74ccf04b92dd'
----
-
 # 会议纪要
 
 时间：2026年8月6日
@@ -43,4 +32,3 @@ AIGC:
 | 预算调整 | 财务部 | 8月20日 |
 - 下月例会时间另行通知
 
-> AI生成

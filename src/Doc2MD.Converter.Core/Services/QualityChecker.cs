@@ -23,35 +23,35 @@ public static class QualityChecker
         var summary = ComputeSummary(result);
 
         // 同步质量评分到 ConversionResult
-        result.QualityScore = summary.Score;
+        result.Quality.QualityScore = summary.Score;
 
         // v2.0: 计算导入建议
-        result.ImportRecommendation = ComputeImportRecommendation(summary.Score, result);
+        result.Quality.ImportRecommendation = ComputeImportRecommendation(summary.Score, result);
 
-        var highCount = result.Warnings.Count(w => w.Severity == "high");
-        var mediumCount = result.Warnings.Count(w => w.Severity == "medium");
-        var lowCount = result.Warnings.Count(w => w.Severity == "low");
+        var highCount = result.Quality.Warnings.Count(w => w.Severity == "high");
+        var mediumCount = result.Quality.Warnings.Count(w => w.Severity == "medium");
+        var lowCount = result.Quality.Warnings.Count(w => w.Severity == "low");
 
         var report = new QualityReport
         {
-            SourceFile = Path.GetFileName(result.SourceFilePath),
-            SourceType = result.SourceType,
+            SourceFile = Path.GetFileName(result.Metadata.SourceFilePath),
+            SourceType = result.Metadata.SourceType,
             OverallScore = summary.Score,
             OverallLevel = summary.Level,
-            ImportRecommendation = result.ImportRecommendation,
-            TotalWarnings = result.Warnings.Count,
+            ImportRecommendation = result.Quality.ImportRecommendation,
+            TotalWarnings = result.Quality.Warnings.Count,
             HighSeverityCount = highCount,
             MediumSeverityCount = mediumCount,
             LowSeverityCount = lowCount,
-            Warnings = result.Warnings.Select(w => new QualityWarningEntry
+            Warnings = result.Quality.Warnings.Select(w => new QualityWarningEntry
             {
                 Code = w.Code,
                 Severity = w.Severity,
                 Message = w.Message,
                 Location = w.Location
             }).ToList(),
-            GovDocument = result.GovMetadata?.IsGovDocument ?? false,
-            GovConfidence = result.GovMetadata?.Confidence ?? 0,
+            GovDocument = result.Metadata.GovMetadata?.IsGovDocument ?? false,
+            GovConfidence = result.Metadata.GovMetadata?.Confidence ?? 0,
             CheckedAt = DateTimeOffset.Now
         };
 
@@ -61,7 +61,7 @@ public static class QualityChecker
     private static (double Score, string Level) ComputeSummary(ConversionResult result)
     {
         double score = 1.0;
-        foreach (var w in result.Warnings)
+        foreach (var w in result.Quality.Warnings)
         {
             score -= w.Code switch
             {
@@ -87,10 +87,10 @@ public static class QualityChecker
             };
         }
 
-        if (result.OcrUsed) score -= 0.05;
+        if (result.Metadata.OcrUsed) score -= 0.05;
 
         // v2.0: 公文加分——识别为公文且有文号时加 0.05
-        if (result.GovMetadata?.IsGovDocument == true && !string.IsNullOrEmpty(result.GovMetadata.DocumentNumber))
+        if (result.Metadata.GovMetadata?.IsGovDocument == true && !string.IsNullOrEmpty(result.Metadata.GovMetadata.DocumentNumber))
             score += 0.05;
 
         score = Math.Max(0.0, Math.Min(1.0, score));
@@ -118,7 +118,7 @@ public static class QualityChecker
         if (!result.Success) return "not_recommended";
 
         // 有 high 级警告 → 建议复核
-        if (result.Warnings.Any(w => w.Severity == "high"))
+        if (result.Quality.Warnings.Any(w => w.Severity == "high"))
             return "review";
 
         // 评分 < 0.7 → 建议复核

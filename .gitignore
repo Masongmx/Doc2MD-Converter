@@ -29,3 +29,21 @@ Desktop.ini
 .temp/
 *.tmp
 *.log
+
+# Internal documents (never publish)
+产品审查报告.md
+内部文档/
+*审查报告*.md
+
+# Local user config & secrets
+*.local.json
+appsettings.local.json
+secrets.json
+.env
+.env.*
+!.env.example
+
+# Optional external tool binaries (installed at deploy time)
+tools/LibreOffice/
+tools/OCR/
+tools/OCRmyPDF/

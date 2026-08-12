@@ -33,6 +33,15 @@ public class PdfParser : IDocumentParser
         _textMerger = new PdfTextMerger(_lineClassifier);
     }
 
+    /// <summary>从全局配置注入 OCR 开关，消除调用方对具体类型的向下转型。</summary>
+    public void Configure(AppConfig? config)
+    {
+        if (config != null)
+        {
+            EnableOcr = config.Preview.DocumentToMarkdown.EnableOcr;
+        }
+    }
+
     public bool CanParse(string filePath)
     {
         var ext = Path.GetExtension(filePath).ToLowerInvariant();
@@ -46,8 +55,8 @@ public class PdfParser : IDocumentParser
 
         try
         {
-            result.SourceFilePath = filePath;
-            result.SourceType = "PDF";
+            result.Metadata.SourceFilePath = filePath;
+            result.Metadata.SourceType = "PDF";
 
             var sb = new StringBuilder();
             var fileName = Path.GetFileNameWithoutExtension(filePath);
@@ -149,12 +158,12 @@ public class PdfParser : IDocumentParser
                 allLineInfos.AddRange(lineInfos);
             }
 
-            result.PageCount = pageCount;
+            result.Metadata.PageCount = pageCount;
 
             // 图片存在但提取全部失败时警告
             if (hasImages && result.ImageExports.Count == 0)
             {
-                result.Warnings.Add(ConversionWarning.Create(
+                result.Quality.Warnings.Add(ConversionWarning.Create(
                     "W_IMG_LOST", "PDF 包含图片，但提取失败", $"全文共 {pageCount} 页"));
             }
 
@@ -166,14 +175,14 @@ public class PdfParser : IDocumentParser
                 var ocr = OfflineOcrService.ExtractPdfText(filePath, cancellationToken);
                 if (!ocr.IsSuccess)
                 {
-                    result.Warnings.Add(ConversionWarning.Create(
+                    result.Quality.Warnings.Add(ConversionWarning.Create(
                         "W_OCR_FAILED", $"OCR 提取失败: {ocr.ErrorMessage}", "全文"));
                     result.Success = false;
                     result.ErrorMessage = ocr.ErrorMessage;
                     return result;
                 }
-                result.OcrUsed = true;
-                result.Warnings.Add(ConversionWarning.Create(
+                result.Metadata.OcrUsed = true;
+                result.Quality.Warnings.Add(ConversionWarning.Create(
                     "W_OCR_LOW_CONFIDENCE",
                     "PDF 为扫描件，已通过 OCR 提取文本，质量可能低于原生文本", "全文"));
 
@@ -181,7 +190,7 @@ public class PdfParser : IDocumentParser
                 sb.AppendLine(ocr.Text);
                 sb.AppendLine("<!-- OCR_TEXT_END -->");
 
-                result.SourceFileName = Path.GetFileName(filePath);
+                result.Metadata.SourceFileName = Path.GetFileName(filePath);
                 result.RawMarkdown = sb.ToString();
                 result.Success = true;
                 result.OutputPath = Path.Combine(outputDirectory, GetSafeFileName(fileName) + ".md");
@@ -198,7 +207,7 @@ public class PdfParser : IDocumentParser
             _lineClassifier.MergeHeadingLines(allLineInfos);
 
             // 合并正文行成段落，输出Markdown
-            var content = _textMerger.MergeIntoParagraphs(allLineInfos, pageBreakIndices, result.Warnings);
+            var content = _textMerger.MergeIntoParagraphs(allLineInfos, pageBreakIndices, result.Quality.Warnings);
 
             sb.Append(content);
 
@@ -218,7 +227,7 @@ public class PdfParser : IDocumentParser
                 sb.AppendLine();
             }
 
-            result.SourceFileName = Path.GetFileName(filePath);
+            result.Metadata.SourceFileName = Path.GetFileName(filePath);
             result.RawMarkdown = sb.ToString();
             result.Success = true;
             result.OutputPath = Path.Combine(outputDirectory, GetSafeFileName(fileName) + ".md");
@@ -381,7 +390,7 @@ public class PdfParser : IDocumentParser
 
         if (checkedPages > 0 && multiColumnPages > checkedPages / 2)
         {
-            result.Warnings.Add(ConversionWarning.Create(
+            result.Quality.Warnings.Add(ConversionWarning.Create(
                 "W_TWO_COLUMN_PDF",
                 $"PDF 疑似双栏布局（{multiColumnPages}/{checkedPages} 页），文本提取顺序可能不正确", "全文"));
         }

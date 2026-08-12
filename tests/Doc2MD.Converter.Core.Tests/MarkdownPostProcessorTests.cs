@@ -17,11 +17,14 @@ public class MarkdownPostProcessorTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "notice.docx",
-            SourceFileName = "notice.docx",
-            SourceType = "Word",
-            SourceFileSize = 1024,
-            RawMarkdown = rawMd
+            RawMarkdown = rawMd,
+            Metadata = new ConversionMetadata
+            {
+                SourceFilePath = "notice.docx",
+                SourceFileName = "notice.docx",
+                SourceType = "Word",
+                SourceFileSize = 1024
+            }
         };
 
         var postResult = MarkdownPostProcessor.Process(rawMd, result);
@@ -31,10 +34,10 @@ public class MarkdownPostProcessorTests
         Assert.Contains("gov_publish_date:", postResult.Markdown);
         Assert.Contains("gov_document_type:", postResult.Markdown);
 
-        Assert.NotNull(result.GovMetadata);
-        Assert.Equal("\u5173\u4e8e\u5f00\u5c55\u8003\u6838\u5de5\u4f5c\u7684\u901a\u77e5", result.GovMetadata!.Title);
-        Assert.Equal("\u4eba\u529b\u8d44\u6e90\u90e8", result.GovMetadata.IssuingAuthority);
-        Assert.Equal("2024-03-15", result.GovMetadata.PublishDate);
+        Assert.NotNull(result.Metadata.GovMetadata);
+        Assert.Equal("\u5173\u4e8e\u5f00\u5c55\u8003\u6838\u5de5\u4f5c\u7684\u901a\u77e5", result.Metadata.GovMetadata!.Title);
+        Assert.Equal("\u4eba\u529b\u8d44\u6e90\u90e8", result.Metadata.GovMetadata.IssuingAuthority);
+        Assert.Equal("2024-03-15", result.Metadata.GovMetadata.PublishDate);
     }
 
     [Fact]
@@ -45,15 +48,18 @@ public class MarkdownPostProcessorTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "test.docx",
-            SourceFileName = "test.docx",
-            SourceType = "Word",
-            RawMarkdown = rawMd
+            RawMarkdown = rawMd,
+            Metadata = new ConversionMetadata
+            {
+                SourceFilePath = "test.docx",
+                SourceFileName = "test.docx",
+                SourceType = "Word"
+            }
         };
 
         var postResult = MarkdownPostProcessor.Process(rawMd, result);
 
-        Assert.Contains(result.Warnings, w => w.Code == "W_AIGC_WATERMARK");
+        Assert.Contains(result.Quality.Warnings, w => w.Code == "W_AIGC_WATERMARK");
         Assert.DoesNotContain("ContentProducer", postResult.Markdown);
         Assert.Contains("Title", postResult.Markdown);
     }
@@ -81,17 +87,20 @@ public class MarkdownPostProcessorTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "test.docx",
-            SourceFileName = "test.docx",
-            SourceType = "Word",
-            RawMarkdown = rawMd
+            RawMarkdown = rawMd,
+            Metadata = new ConversionMetadata
+            {
+                SourceFilePath = "test.docx",
+                SourceFileName = "test.docx",
+                SourceType = "Word"
+            }
         };
 
         var postResult = MarkdownPostProcessor.Process(rawMd, result);
 
         Assert.DoesNotContain("AIGC\u6807\u8bc6", postResult.Markdown);
         Assert.Contains("Body", postResult.Markdown);
-        Assert.Contains(result.Warnings, w => w.Code == "W_AIGC_WATERMARK");
+        Assert.Contains(result.Quality.Warnings, w => w.Code == "W_AIGC_WATERMARK");
     }
 
     [Fact]
@@ -102,10 +111,13 @@ public class MarkdownPostProcessorTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "notice.docx",
-            SourceFileName = "notice.docx",
-            SourceType = "Word",
-            RawMarkdown = rawMd
+            RawMarkdown = rawMd,
+            Metadata = new ConversionMetadata
+            {
+                SourceFilePath = "notice.docx",
+                SourceFileName = "notice.docx",
+                SourceType = "Word"
+            }
         };
 
         var postResult = MarkdownPostProcessor.Process(rawMd, result);
@@ -123,10 +135,13 @@ public class MarkdownPostProcessorTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "test.md",
-            SourceFileName = "test.md",
-            SourceType = "Text",
-            RawMarkdown = rawMd
+            RawMarkdown = rawMd,
+            Metadata = new ConversionMetadata
+            {
+                SourceFilePath = "test.md",
+                SourceFileName = "test.md",
+                SourceType = "Text"
+            }
         };
 
         var postResult = MarkdownPostProcessor.Process(rawMd, result);

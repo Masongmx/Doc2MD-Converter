@@ -7,23 +7,39 @@ namespace Doc2MD.Services;
 
 public class ConversionService
 {
-    private readonly List<IDocumentParser> _parsers;
+    private readonly IParserRegistry _parserRegistry;
+    private readonly ILoggingService _logger;
 
     public event EventHandler<FileItem>? FileCompleted;
 
     public ConversionService()
+        : this(new DocumentParserRegistry(), LoggingService.Logger)
     {
-        _parsers =
-        [
-            new WordParser(),
-            new ExcelParser(),
-            new PowerPointParser(),
-            new TextParser(),
-            new PdfParser()
-        ];
     }
 
-    public async Task ConvertFileAsync(
+    /// <summary>
+    /// 通过解析器注册表构造转换服务。注册表负责解析器选择与配置注入，
+    /// 使转换服务不再直接持有具体解析器，提升可扩展性与可测试性。
+    /// </summary>
+    public ConversionService(IParserRegistry parserRegistry)
+        : this(parserRegistry, LoggingService.Logger)
+    {
+    }
+
+    /// <summary>
+    /// 完整的注入构造函数：可注入解析器注册表与日志服务（DI 迁移 C1）。
+    /// </summary>
+    public ConversionService(IParserRegistry parserRegistry, ILoggingService logger)
+    {
+        _parserRegistry = parserRegistry;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// 转换单个文件。返回 ConversionResult 供调用方读取质量评分等明细
+    /// （F4 历史记录）；解析器不存在时返回 null。
+    /// </summary>
+    public async Task<ConversionResult?> ConvertFileAsync(
         FileItem file,
         string outputDirectory,
         bool preserveStructure,
@@ -33,25 +49,22 @@ public class ConversionService
         CancellationToken cancellationToken)
     {
         file.Status = FileStatus.Processing;
-        LoggingService.Info($"[Conversion] 开始处理: {file.FullPath}");
+        _logger.Info($"[Conversion] 开始处理: {file.FullPath}");
 
-        var parser = _parsers.FirstOrDefault(p => p.Target == target && p.CanParse(file.FullPath));
+        var parser = _parserRegistry.Resolve(target, file.FullPath);
         if (parser == null)
         {
             file.Status = FileStatus.Failed;
             file.ErrorMessage = $"不支持的文件格式: {Path.GetExtension(file.FullPath)}";
             FileCompleted?.Invoke(this, file);
-            return;
+            return null;
         }
 
         var currentOutputDirectory = ResolveOutputDirectory(file, outputDirectory, preserveStructure, inputRoot);
         Directory.CreateDirectory(currentOutputDirectory);
 
-        // 如果是 PdfParser，注入 OCR 配置
-        if (parser is PdfParser pdfParser && config != null)
-        {
-            pdfParser.EnableOcr = config.Preview.DocumentToMarkdown.EnableOcr;
-        }
+        // 通过接口钩子注入配置（如 PDF 的 OCR 开关），无需针对具体类型做向下转型
+        parser.Configure(config);
 
         try
         {
@@ -76,8 +89,8 @@ public class ConversionService
                 {
                     // === 后处理管线 ===
                     var postResult = MarkdownPostProcessor.Process(rawMarkdown, result);
-                    result.BlockCount = postResult.BlockCount;
-                    result.UnsupportedObjectCount = postResult.UnsupportedObjectCount;
+                    result.Quality.BlockCount = postResult.BlockCount;
+                    result.Quality.UnsupportedObjectCount = postResult.UnsupportedObjectCount;
 
                     var metaJson = MetaGenerator.Generate(result);
                     var qualityJson = QualityChecker.GenerateReport(result);
@@ -104,14 +117,14 @@ public class ConversionService
                 file.Status = FileStatus.Done;
                 file.OutputPath = result.OutputPath;
                 file.ErrorMessage = null;
-                LoggingService.Info($"[Conversion] 完成: {file.FullPath} -> {result.OutputPath}");
+                _logger.Info($"[Conversion] 完成: {file.FullPath} -> {result.OutputPath}");
+                return result;
             }
-            else
-            {
-                file.Status = FileStatus.Failed;
-                file.ErrorMessage = result.ErrorMessage;
-                LoggingService.Warning($"[Conversion] 失败: {file.FullPath} - {result.ErrorMessage}");
-            }
+
+            file.Status = FileStatus.Failed;
+            file.ErrorMessage = result.ErrorMessage;
+            _logger.Warning($"[Conversion] 失败: {file.FullPath} - {result.ErrorMessage}");
+            return result;
         }
         catch (OperationCanceledException)
         {
@@ -125,6 +138,7 @@ public class ConversionService
             file.Status = FileStatus.Failed;
             file.ErrorMessage = ex.Message;
             LoggingService.Error($"[Conversion] 异常: {file.FullPath}", ex);
+            return null;
         }
         finally
         {
@@ -132,11 +146,12 @@ public class ConversionService
         }
     }
 
-    private static void FillSourceInfo(ConversionResult result, string filePath)
+    private void FillSourceInfo(ConversionResult result, string filePath)
     {
-        result.SourceFilePath = filePath;
-        result.SourceFileName ??= Path.GetFileName(filePath);
-        result.SourceType = result.SourceType ?? Path.GetExtension(filePath).ToLowerInvariant() switch
+        var metadata = result.Metadata;
+        metadata.SourceFilePath = filePath;
+        metadata.SourceFileName ??= Path.GetFileName(filePath);
+        metadata.SourceType = metadata.SourceType ?? Path.GetExtension(filePath).ToLowerInvariant() switch
         {
             ".pdf" => "PDF",
             ".docx" or ".doc" => "Word",
@@ -150,16 +165,16 @@ public class ConversionService
         try
         {
             var fi = new FileInfo(filePath);
-            result.SourceFileSize = fi.Length;
+            metadata.SourceFileSize = fi.Length;
 
             if (fi.Length > 0)
             {
-                result.SourceFileHashSha256 = MarkdownPostProcessor.ComputeSha256(filePath);
+                metadata.SourceFileHashSha256 = MarkdownPostProcessor.ComputeSha256(filePath);
             }
         }
         catch (Exception ex)
         {
-            LoggingService.Warning($"[Conversion] 无法读取文件信息: {filePath} - {ex.Message}");
+            _logger.Warning($"[Conversion] 无法读取文件信息: {filePath} - {ex.Message}");
         }
     }
 

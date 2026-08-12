@@ -1,8 +1,7 @@
 ﻿<Application x:Class="Doc2MD.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:converters="clr-namespace:Doc2MD.Converters"
-             StartupUri="MainWindow.xaml">
+             xmlns:converters="clr-namespace:Doc2MD.Converters">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -22,6 +21,8 @@
             <converters:ToneBrushConverter x:Key="ToneBrushConverter"/>
             <converters:ToastBackgroundConverter x:Key="ToastBackgroundConverter"/>
             <converters:PercentToWidthConverter x:Key="PercentToWidthConverter"/>
+            <converters:OutputPathDisplayConverter x:Key="OutputPathDisplayConverter"/>
+            <converters:HasOutputPathVisibilityConverter x:Key="HasOutputPathVisibilityConverter"/>
             <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         </ResourceDictionary>
     </Application.Resources>

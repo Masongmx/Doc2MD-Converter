@@ -29,8 +29,8 @@ public class ExcelParser : IDocumentParser
 
         try
         {
-            result.SourceFilePath = filePath;
-            result.SourceType = "Excel";
+            result.Metadata.SourceFilePath = filePath;
+            result.Metadata.SourceType = "Excel";
 
             var ext = Path.GetExtension(filePath).ToLowerInvariant();
             if (ext == ".xls")
@@ -53,7 +53,7 @@ public class ExcelParser : IDocumentParser
                         var parsedResult = Parse(comResult.ConvertedPath!, outputDirectory, cancellationToken);
                         if (parsedResult.Success)
                         {
-                            parsedResult.Warnings.Add(ConversionWarning.Create(
+                            parsedResult.Quality.Warnings.Add(ConversionWarning.Create(
                                 "W_LEGACY_FALLBACK",
                                 ".xls 文件通过 Excel COM 自动化转换（LibreOffice 不可用），公式结果和样式信息可能略有差异",
                                 "全文"));
@@ -97,7 +97,7 @@ public class ExcelParser : IDocumentParser
             }
 
             var sheets = sheetsContainer.Elements<Sheet>().ToList();
-            result.SheetCount = sheets.Count;
+            result.Metadata.SheetCount = sheets.Count;
 
             bool isFirstSheet = true;
 
@@ -135,7 +135,7 @@ public class ExcelParser : IDocumentParser
                 var mergeCells = worksheet.GetFirstChild<MergeCells>();
                 if (mergeCells != null && mergeCells.Elements<MergeCell>().Any())
                 {
-                    result.Warnings.Add(ConversionWarning.Create(
+                    result.Quality.Warnings.Add(ConversionWarning.Create(
                         "W_MERGED_CELLS",
                         $"工作表「{sheetName}」包含合并单元格，仅保留首个单元格的值", sheetName));
                 }
@@ -145,7 +145,7 @@ public class ExcelParser : IDocumentParser
                     .Count(c => c.CellFormula != null);
                 if (formulaCells > 0)
                 {
-                    result.Warnings.Add(ConversionWarning.Create(
+                    result.Quality.Warnings.Add(ConversionWarning.Create(
                         "W_FORMULA_LOST",
                         $"工作表「{sheetName}」包含 {formulaCells} 个公式单元格，仅提取计算结果", sheetName));
                 }
@@ -155,7 +155,7 @@ public class ExcelParser : IDocumentParser
                     .Count(r => r.Hidden?.Value == true);
                 if (hiddenRows > 0)
                 {
-                    result.Warnings.Add(ConversionWarning.Create(
+                    result.Quality.Warnings.Add(ConversionWarning.Create(
                         "W_HIDDEN_ROW",
                         $"工作表「{sheetName}」包含 {hiddenRows} 个隐藏行，未提取", sheetName));
                 }
@@ -164,12 +164,12 @@ public class ExcelParser : IDocumentParser
                 if (worksheetPart.DrawingsPart != null
                     && worksheetPart.DrawingsPart.Parts.Any(p => p.OpenXmlPart is ChartPart))
                 {
-                    result.Warnings.Add(ConversionWarning.Create(
+                    result.Quality.Warnings.Add(ConversionWarning.Create(
                         "W_CHART_LOST",
                         $"工作表「{sheetName}」包含图表，暂不支持提取", sheetName));
                 }
 
-                var table = ParseSheetData(sheetData, workbookPart, cellFormats, sheetName, result.Warnings, result.TableExports);
+                var table = ParseSheetData(sheetData, workbookPart, cellFormats, sheetName, result.Quality.Warnings, result.TableExports);
                 sb.Append(table);
 
                 sb.AppendLine($"<!-- SHEET_END -->");
@@ -177,7 +177,7 @@ public class ExcelParser : IDocumentParser
                 isFirstSheet = false;
             }
 
-            result.SourceFileName = Path.GetFileName(filePath);
+            result.Metadata.SourceFileName = Path.GetFileName(filePath);
             result.RawMarkdown = sb.ToString();
             result.Success = true;
             result.OutputPath = Path.Combine(outputDirectory, 

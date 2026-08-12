@@ -1,4 +1,4 @@
-# Smoke Test Script for Doc2MD Converter v2.0.0
+# Smoke Test Script for Doc2MD Converter v2.1.0
 # Usage: .\scripts\smoke-test.ps1 [-NoRestore]
 #
 # Tests:

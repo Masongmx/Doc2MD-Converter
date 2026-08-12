@@ -263,9 +263,10 @@ public class DocxFormatter
 
             targetStylesPart.Styles!.Save();
         }
-        catch
+        catch (Exception ex)
         {
-            // 模板样式注入失败不应阻断排版流程
+            // 模板样式注入失败不应阻断排版流程，但需记录日志便于排查
+            LoggingService.Warning($"模板样式注入失败，已跳过: {ex.Message}");
         }
     }
 

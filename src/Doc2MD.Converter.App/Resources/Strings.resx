@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ===== 通用状态文本 ===== -->
+  <data name="Status_Ready" xml:space="preserve"><value>就绪</value></data>
+  <data name="Status_Generating" xml:space="preserve"><value>正在生成</value></data>
+  <data name="Status_Generated" xml:space="preserve"><value>生成完成</value></data>
+  <data name="Status_Cancelled" xml:space="preserve"><value>已取消</value></data>
+  <data name="Status_PartiallyFailed" xml:space="preserve"><value>部分失败</value></data>
+  <data name="Status_Cancelling" xml:space="preserve"><value>正在取消...</value></data>
+  <data name="Status_Interrupted" xml:space="preserve"><value>处理已中断</value></data>
+  <data name="Status_ListCleared" xml:space="preserve"><value>文件列表已清空</value></data>
+  <data name="Status_NoNewFiles" xml:space="preserve"><value>未添加新文件</value></data>
+  <data name="Status_ScanFailed" xml:space="preserve"><value>扫描失败</value></data>
+  <data name="Status_ScanCancelled" xml:space="preserve"><value>已取消扫描</value></data>
+
+  <data name="Action_Verb_ToMarkdown" xml:space="preserve"><value>正在生成 Markdown</value></data>
+  <data name="Action_Verb_ToDocx" xml:space="preserve"><value>正在生成 DOCX</value></data>
+  <data name="Action_Verb_Format" xml:space="preserve"><value>正在排版</value></data>
+
+  <data name="Progress_NoTasks" xml:space="preserve"><value>暂无任务</value></data>
+  <data name="Progress_PartiallyFailed" xml:space="preserve"><value>部分失败：{0} 成功，{1} 失败</value></data>
+  <data name="Progress_Completed" xml:space="preserve"><value>已完成：{0} / {1}</value></data>
+  <data name="Progress_Processing" xml:space="preserve"><value>{0}：{1} / {2}</value></data>
+
+  <!-- ===== 模式文本 ===== -->
+  <data name="Mode_ToMarkdown_Title" xml:space="preserve"><value>文档转 Markdown</value></data>
+  <data name="Mode_ToMarkdown_Desc" xml:space="preserve"><value>支持 PDF / Word / Excel / PPT</value></data>
+  <data name="Mode_ToMarkdown_Detail" xml:space="preserve"><value>本地解析，提取文本内容</value></data>
+  <data name="Mode_ToDocx_Title" xml:space="preserve"><value>Markdown 转 DOCX</value></data>
+  <data name="Mode_ToDocx_Desc" xml:space="preserve"><value>按照公文格式生成 Word 文档</value></data>
+  <data name="Mode_ToDocx_Detail" xml:space="preserve"><value>批量转换，高效稳定</value></data>
+  <data name="Mode_Format_Title" xml:space="preserve"><value>一键排版</value></data>
+  <data name="Mode_Format_Desc" xml:space="preserve"><value>统一字体、标题、段落与页边距</value></data>
+  <data name="Mode_Format_Detail" xml:space="preserve"><value>规范化排版，提升文档质量</value></data>
+
+  <data name="Button_AddFiles" xml:space="preserve"><value>添加文件</value></data>
+  <data name="Button_AddMarkdown" xml:space="preserve"><value>添加 Markdown</value></data>
+  <data name="Button_AddWord" xml:space="preserve"><value>添加 Word</value></data>
+  <data name="Button_GenerateMarkdown" xml:space="preserve"><value>生成 Markdown</value></data>
+  <data name="Button_GenerateDocx" xml:space="preserve"><value>生成 DOCX</value></data>
+  <data name="Button_StartFormat" xml:space="preserve"><value>开始排版</value></data>
+  <data name="Button_OpenOutputDir" xml:space="preserve"><value>打开输出目录</value></data>
+  <data name="Button_RetryFailed" xml:space="preserve"><value>重试失败 ({0})</value></data>
+
+  <data name="DropZone_ToMarkdown_Title" xml:space="preserve"><value>拖拽文档或文件夹到这里</value></data>
+  <data name="DropZone_ToDocx_Title" xml:space="preserve"><value>拖拽 Markdown 文件或文件夹到这里</value></data>
+  <data name="DropZone_Format_Title" xml:space="preserve"><value>拖拽 Word 文档或文件夹到这里</value></data>
+  <data name="DropZone_ToMarkdown_Subtitle" xml:space="preserve"><value>支持 PDF / Word / Excel / PPT</value></data>
+  <data name="DropZone_ToDocx_Subtitle" xml:space="preserve"><value>支持 .md / .markdown 文件</value></data>
+  <data name="DropZone_Format_Subtitle" xml:space="preserve"><value>支持 .doc / .docx 文件</value></data>
+  <data name="DropZone_Footnote" xml:space="preserve"><value>也可以点击上方按钮添加</value></data>
+  <data name="DropZone_DragActive" xml:space="preserve"><value>松开以添加文件</value></data>
+
+  <data name="FileLabel_Document" xml:space="preserve"><value>文档</value></data>
+  <data name="FileLabel_Markdown" xml:space="preserve"><value>Markdown 文件</value></data>
+  <data name="FileLabel_Word" xml:space="preserve"><value>Word 文件</value></data>
+
+  <!-- ===== Toast 通知 ===== -->
+  <data name="Toast_ConversionDone" xml:space="preserve"><value>转换完成，已保存到输出目录</value></data>
+  <data name="Toast_PartiallyFailed" xml:space="preserve"><value>部分文件转换失败，请查看任务列表</value></data>
+  <data name="Toast_NoProcessableFiles" xml:space="preserve"><value>没有可处理的文件</value></data>
+  <data name="Toast_ListClearedUndo" xml:space="preserve"><value>已清空 {0} 个文件，可撤销</value></data>
+  <data name="Toast_NothingToUndo" xml:space="preserve"><value>没有可撤销的操作</value></data>
+  <data name="Toast_ListRestored" xml:space="preserve"><value>已恢复文件列表</value></data>
+  <data name="Status_ListRestored" xml:space="preserve"><value>文件列表已恢复</value></data>
+  <data name="Toast_AddedFiles" xml:space="preserve"><value>已添加 {0} 个文件</value></data>
+  <data name="Toast_SkippedDuplicates" xml:space="preserve"><value>已跳过 {0} 个重复文件</value></data>
+  <data name="Toast_UnsupportedRetained" xml:space="preserve"><value>已保留 {0} 个不支持的文件</value></data>
+  <data name="Toast_LegacyNeedLibreOffice" xml:space="preserve"><value>检测到 {0} 个旧格式文件（.doc/.xls/.ppt），需安装 LibreOffice 才能转换</value></data>
+  <data name="Toast_FolderLegacyNeedLibreOffice" xml:space="preserve"><value>文件夹含旧格式文件（.doc/.xls/.ppt），需安装 LibreOffice 才能转换</value></data>
+  <data name="Toast_ConfigCorrupted" xml:space="preserve"><value>配置文件已损坏，已恢复为默认设置</value></data>
+  <data name="Toast_CopiedErrorInfo" xml:space="preserve"><value>已复制错误信息</value></data>
+  <data name="Toast_OutputDirUpdated" xml:space="preserve"><value>输出目录已更新</value></data>
+  <data name="Toast_OutputDirCreated" xml:space="preserve"><value>输出目录不存在，已自动创建</value></data>
+  <data name="Toast_SelectOutputDir" xml:space="preserve"><value>请选择输出目录，默认使用源文件所在目录</value></data>
+  <data name="Toast_FolderNotExist" xml:space="preserve"><value>所选文件夹不存在</value></data>
+  <data name="Toast_ScanFailed" xml:space="preserve"><value>扫描文件夹失败，请查看日志</value></data>
+  <data name="Toast_MarkedForRetry" xml:space="preserve"><value>已将 {0} 标记为重试</value></data>
+  <data name="Toast_RemovedFiles" xml:space="preserve"><value>已移除 {0} 个文件</value></data>
+  <data name="Toast_CheckingUpdate" xml:space="preserve"><value>正在检查更新...</value></data>
+  <data name="Toast_UpdateCheckFailed" xml:space="preserve"><value>检查更新失败，请稍后重试</value></data>
+  <data name="Toast_UpToDate" xml:space="preserve"><value>当前已是最新版本（{0}）</value></data>
+  <data name="Dialog_UpdateAvailable" xml:space="preserve"><value>发现新版本 {0}（当前 {1}）。&#10;&#10;下载地址：{2}&#10;&#10;是否打开下载页面？</value></data>
+  <data name="Dialog_UpdateTitle" xml:space="preserve"><value>发现新版本</value></data>
+  <data name="Toast_CopySoftwareInfo" xml:space="preserve"><value>已复制软件信息</value></data>
+  <data name="Toast_CopiedOutputPath" xml:space="preserve"><value>已复制输出路径</value></data>
+  <data name="Toast_CopyFailed" xml:space="preserve"><value>复制失败，请重试</value></data>
+  <data name="Toast_SettingsSaved" xml:space="preserve"><value>设置已保存</value></data>
+  <data name="Toast_OpenPathFailed" xml:space="preserve"><value>打开路径失败，请查看日志</value></data>
+
+  <!-- ===== 状态扫描文本 ===== -->
+  <data name="Scan_PrimaryScanning" xml:space="preserve"><value>正在扫描文件夹...</value></data>
+  <data name="Scan_SecondaryDefault" xml:space="preserve"><value>正在识别文件和子目录</value></data>
+  <data name="Scan_SecondaryProgress" xml:space="preserve"><value>已发现 {0} 个文件，其中 {1} 个可处理</value></data>
+  <data name="Scan_StatusSwitching" xml:space="preserve"><value>正在切换文件夹...</value></data>
+  <data name="Scan_StatusRefreshing" xml:space="preserve"><value>正在刷新文件夹...</value></data>
+  <data name="Scan_LoadedMessage" xml:space="preserve"><value>已加载 {0} 个{1}</value></data>
+  <data name="Scan_IgnoredUnsupported" xml:space="preserve"><value>已忽略 {0} 个不支持的文件</value></data>
+  <data name="Scan_Truncated" xml:space="preserve"><value>已达扫描上限，仅加载前 {0} 个文件（含 {1} 个可处理）</value></data>
+
+  <!-- ===== 添加文件状态 ===== -->
+  <data name="Add_StatusAdded" xml:space="preserve"><value>已添加 {0} 个文件</value></data>
+
+  <!-- ===== 当前文件夹摘要 ===== -->
+  <data name="FolderSummary_Current" xml:space="preserve"><value>当前文件夹：{0}    共 {1} 个文件，其中 {2} 个可处理</value></data>
+  <data name="FolderSummary_Added" xml:space="preserve"><value>已添加 {0} 个文件</value></data>
+
+  <!-- ===== 文件对话框 ===== -->
+  <data name="Dialog_OutputDirTitle" xml:space="preserve"><value>选择输出目录</value></data>
+  <data name="Dialog_FolderTitle" xml:space="preserve"><value>选择文件夹</value></data>
+  <data name="Dialog_OutputDirNotExist" xml:space="preserve"><value>输出目录不存在，是否创建？</value></data>
+  <data name="Dialog_CreateOutputDir" xml:space="preserve"><value>创建输出目录</value></data>
+  <data name="Dialog_ClearConfirm" xml:space="preserve"><value>确定清空文件列表？</value></data>
+
+  <!-- ===== 文件对话框过滤器 ===== -->
+  <data name="Filter_Markdown" xml:space="preserve"><value>Markdown 文件</value></data>
+  <data name="Filter_Word" xml:space="preserve"><value>Word 文档</value></data>
+  <data name="Filter_SupportedDocs" xml:space="preserve"><value>支持的文档</value></data>
+  <data name="Filter_AllFiles" xml:space="preserve"><value>所有文件</value></data>
+
+  <!-- ===== 软件信息 ===== -->
+  <data name="SoftwareInfo_LocalOffline" xml:space="preserve"><value>本地离线运行</value></data>
+  <data name="SoftwareInfo_LogDir" xml:space="preserve"><value>日志目录：{0}</value></data>
+  <data name="SoftwareInfo_Template" xml:space="preserve"><value>Doc2MD Converter {0}{1}本地离线运行{1}日志目录：{2}</value></data>
+
+  <!-- ===== 首次启动引导（P1） ===== -->
+  <data name="Onboarding_Title" xml:space="preserve"><value>欢迎使用 Doc2MD Converter</value></data>
+  <data name="Onboarding_Subtitle" xml:space="preserve"><value>一个本地、离线、安全的文档转换工具</value></data>
+  <data name="Onboarding_Step1_Title" xml:space="preserve"><value>选择你要做的事</value></data>
+  <data name="Onboarding_Step1_Desc" xml:space="preserve"><value>顶部三个卡片对应三种工作模式，点击即可切换。</value></data>
+  <data name="Onboarding_Step2_Title" xml:space="preserve"><value>添加文件，一键处理</value></data>
+  <data name="Onboarding_Step2_Desc" xml:space="preserve"><value>点击「添加文件」或将文件拖拽到右侧区域，即可开始批量处理。</value></data>
+  <data name="Onboarding_Step3_Title" xml:space="preserve"><value>完成后打开输出目录</value></data>
+  <data name="Onboarding_Step3_Desc" xml:space="preserve"><value>转换完成后可一键打开输出目录，或复制文件输出路径。</value></data>
+  <data name="Onboarding_Start" xml:space="preserve"><value>开始使用</value></data>
+  <data name="Onboarding_Skip" xml:space="preserve"><value>跳过引导，直接使用</value></data>
+
+  <!-- ===== 转换预览（F2） ===== -->
+  <data name="Button_Preview" xml:space="preserve"><value>预览</value></data>
+  <data name="Button_Close" xml:space="preserve"><value>关闭</value></data>
+  <data name="Preview_PanelTitle" xml:space="preserve"><value>转换预览</value></data>
+  <data name="Preview_Empty" xml:space="preserve"><value>在左侧列表中选中一个 Markdown 文件即可预览转换后的效果</value></data>
+  <data name="Preview_NotMarkdown" xml:space="preserve"><value>仅 Markdown 文件支持预览</value></data>
+  <data name="Preview_FileMissing" xml:space="preserve"><value>源文件不存在或已被移动</value></data>
+  <data name="Preview_RenderFailed" xml:space="preserve"><value>预览渲染失败</value></data>
+</root>

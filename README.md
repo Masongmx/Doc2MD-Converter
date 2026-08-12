@@ -1,14 +1,3 @@
----
-AIGC:
-  ContentProducer: '001191110102MAD55U9H0F10002'
-  ContentPropagator: '001191110102MAD55U9H0F10002'
-  Label: '1'
-  ProduceID: 'd5e3758c-f3fa-4657-b9af-33a2fdcb8e2f'
-  PropagateID: 'd5e3758c-f3fa-4657-b9af-33a2fdcb8e2f'
-  ReservedCode1: '8d7f4a9d-a035-44e3-8dca-d30ae208b4ce'
-  ReservedCode2: '8d7f4a9d-a035-44e3-8dca-d30ae208b4ce'
----
-
 # Doc2MD Converter
 
 可完全离线运行的 Windows 文档转换与中文公文排版工具。
@@ -56,4 +45,3 @@ dotnet run --project src/Doc2MD.Converter.App
 
 见 LICENSE 文件。
 
-> AI生成

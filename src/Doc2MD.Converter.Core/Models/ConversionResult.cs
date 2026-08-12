@@ -3,61 +3,18 @@ using Doc2MD.Services;
 
 namespace Doc2MD.Models;
 
+/// <summary>
+/// 转换结果（核心输出）。
+/// C4 拆分：来源/元数据见 <see cref="ConversionMetadata"/>，质量/警告见 <see cref="ConversionQuality"/>。
+/// </summary>
 public class ConversionResult
 {
-    // === 原有字段 ===
+    // === 核心输出 ===
+
     public bool Success { get; set; }
     public string? OutputPath { get; set; }
     public string? ErrorMessage { get; set; }
     public TimeSpan Duration { get; set; }
-
-    // === 来源信息 ===
-
-    /// <summary>源文件完整路径</summary>
-    public string? SourceFilePath { get; set; }
-
-    /// <summary>源文件名（仅文件名，不含路径）</summary>
-    public string? SourceFileName { get; set; }
-
-    /// <summary>源文件类型 (PDF/Word/Excel/PowerPoint/Text)</summary>
-    public string? SourceType { get; set; }
-
-    /// <summary>源文件大小（字节）</summary>
-    public long SourceFileSize { get; set; }
-
-    /// <summary>源文件 SHA-256 哈希</summary>
-    public string? SourceFileHashSha256 { get; set; }
-
-    // === 文档统计 ===
-
-    /// <summary>PDF 页数</summary>
-    public int PageCount { get; set; }
-
-    /// <summary>Excel 工作表数</summary>
-    public int SheetCount { get; set; }
-
-    /// <summary>PPT 幻灯片数</summary>
-    public int SlideCount { get; set; }
-
-    /// <summary>是否使用了 OCR</summary>
-    public bool OcrUsed { get; set; }
-
-    // === 质量与警告 ===
-
-    /// <summary>转换过程中产生的警告列表</summary>
-    public List<ConversionWarning> Warnings { get; set; } = [];
-
-    /// <summary>Markdown 内容中的 block 数量（后处理阶段填充）</summary>
-    public int BlockCount { get; set; }
-
-    /// <summary>不支持的对象数量（后处理阶段填充）</summary>
-    public int UnsupportedObjectCount { get; set; }
-
-    /// <summary>质量评分（0.0 - 1.0）</summary>
-    public double QualityScore { get; set; } = 1.0;
-
-    /// <summary>文档语言</summary>
-    public string Language { get; set; } = "zh-CN";
 
     // === 输出包信息 ===
 
@@ -78,14 +35,13 @@ public class ConversionResult
     // === 表格 CSV 导出（用于 tables/ 目录）===
     public List<TableExport> TableExports { get; set; } = [];
 
-    // === 公文元数据（v2.0 新增） ===
+    // === 组合子对象（C4 拆分） ===
 
-    /// <summary>公文元数据提取结果（后处理阶段填充）</summary>
-    [JsonIgnore]
-    public GovMetadata? GovMetadata { get; set; }
+    /// <summary>来源信息与文档统计（C4）</summary>
+    public ConversionMetadata Metadata { get; set; } = new();
 
-    /// <summary>导入建议等级（v2.0 新增）：recommended | review | not_recommended</summary>
-    public string ImportRecommendation { get; set; } = "recommended";
+    /// <summary>质量评分与警告（C4）</summary>
+    public ConversionQuality Quality { get; set; } = new();
 }
 
 /// <summary>

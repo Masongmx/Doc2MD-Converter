@@ -10,251 +10,49 @@ namespace Doc2MD.Pipeline.Services;
 /// </summary>
 public static class SemanticDocumentConverter
 {
+    private static readonly Regex HeadingPattern = new(@"^(#{1,6})\s+(.+)", RegexOptions.Compiled);
+    private static readonly Regex UnorderedListPattern = new(@"^(\s*)([-*+])\s+(.+)", RegexOptions.Compiled);
+    private static readonly Regex OrderedListPattern = new(@"^(\s*)(\d+)\.\s+(.+)", RegexOptions.Compiled);
+    private static readonly Regex HorizontalRulePattern = new(@"^(-{3,}|\*{3,}|_{3,})$", RegexOptions.Compiled);
+    private static readonly Regex QuotePattern = new(@"^>\s*(.*)", RegexOptions.Compiled);
+
     /// <summary>将 Markdown 文本解析为 SemanticDocument</summary>
     public static SemanticDocument Convert(string markdown)
     {
         var doc = new SemanticDocument();
         var lines = markdown.Split('\n');
-        int i = 0;
-
-        // 跳过 frontmatter
-        if (lines.Length > 0 && lines[0].Trim() == "---")
-        {
-            i = 1;
-            while (i < lines.Length && lines[i].Trim() != "---") i++;
-            i++; // skip closing ---
-        }
-
-        // 跳过 AI_AGENT_NOTICE 块
-        while (i < lines.Length && lines[i].Trim().StartsWith("<!--")) i++;
-
         var currentParagraph = new System.Text.StringBuilder();
+        int i = SkipPreamble(lines);
 
         while (i < lines.Length)
         {
             var line = lines[i];
+            var trimmedLine = line.Trim();
 
             // 空行 → 段落结束
             if (string.IsNullOrWhiteSpace(line))
             {
-                if (currentParagraph.Length > 0)
-                {
-                    var content = currentParagraph.ToString().Trim();
-                    doc.Blocks.Add(new ParagraphBlock
-                    {
-                        Content = content,
-                        Runs = ParseInlineFormatting(content)
-                    });
-                    currentParagraph.Clear();
-                }
+                FlushParagraph(doc, currentParagraph);
                 i++;
                 continue;
             }
 
             // HTML 注释 → 跳过（单行 + 多行）
-            var trimmedLine = line.Trim();
-            if (trimmedLine.StartsWith("<!--"))
+            if (IsHtmlComment(trimmedLine))
             {
-                if (trimmedLine.EndsWith("-->"))
-                {
-                    i++;
-                    continue;
-                }
-                i++;
-                while (i < lines.Length)
-                {
-                    if (lines[i].Contains("-->"))
-                    {
-                        i++;
-                        break;
-                    }
-                    i++;
-                }
+                i = SkipHtmlComment(lines, i);
                 continue;
             }
 
-            // 标题
-            var headingMatch = Regex.Match(line, @"^(#{1,6})\s+(.+)");
-            if (headingMatch.Success)
+            // 各语义块：命中即刷新段落并解析，返回 true 表示已消费该行
+            if (TryParseHeading(doc, currentParagraph, line, i, out var nextIndex)
+                || TryParseTable(doc, currentParagraph, lines, i, trimmedLine, out nextIndex)
+                || TryParseUnorderedList(doc, currentParagraph, line, i, out nextIndex)
+                || TryParseOrderedList(doc, currentParagraph, line, i, out nextIndex)
+                || TryParseHorizontalRule(doc, currentParagraph, trimmedLine, i, out nextIndex)
+                || TryParseBlockquote(doc, currentParagraph, line, i, out nextIndex))
             {
-                if (currentParagraph.Length > 0)
-                {
-                    var content = currentParagraph.ToString().Trim();
-                    doc.Blocks.Add(new ParagraphBlock
-                    {
-                        Content = content,
-                        Runs = ParseInlineFormatting(content)
-                    });
-                    currentParagraph.Clear();
-                }
-
-                var headingContent = headingMatch.Groups[2].Value.Trim();
-                doc.Blocks.Add(new HeadingBlock
-                {
-                    Level = headingMatch.Groups[1].Value.Length,
-                    Content = headingContent,
-                    Runs = ParseInlineFormatting(headingContent)
-                });
-                i++;
-                continue;
-            }
-
-            // 表格
-            if (trimmedLine.StartsWith("|"))
-            {
-                if (currentParagraph.Length > 0)
-                {
-                    var content = currentParagraph.ToString().Trim();
-                    doc.Blocks.Add(new ParagraphBlock
-                    {
-                        Content = content,
-                        Runs = ParseInlineFormatting(content)
-                    });
-                    currentParagraph.Clear();
-                }
-
-                var tableLines = new List<string>();
-                while (i < lines.Length && lines[i].TrimStart().StartsWith("|"))
-                {
-                    tableLines.Add(lines[i]);
-                    i++;
-                }
-
-                doc.Blocks.Add(ParseTable(tableLines));
-                continue;
-            }
-
-            // 无序列表项
-            var listMatch = Regex.Match(line, @"^(\s*)([-*+])\s+(.+)");
-            if (listMatch.Success)
-            {
-                if (currentParagraph.Length > 0)
-                {
-                    var content = currentParagraph.ToString().Trim();
-                    doc.Blocks.Add(new ParagraphBlock
-                    {
-                        Content = content,
-                        Runs = ParseInlineFormatting(content)
-                    });
-                    currentParagraph.Clear();
-                }
-
-                // 尝试合并到已有 ListBlock
-                var itemContent = listMatch.Groups[3].Value;
-                if (doc.Blocks.Count > 0 && doc.Blocks[^1] is ListBlock lb && !lb.IsOrdered)
-                {
-                    lb.Items.Add(new ListItem
-                    {
-                        Content = itemContent,
-                        Runs = ParseInlineFormatting(itemContent)
-                    });
-                }
-                else
-                {
-                    var list = new ListBlock { IsOrdered = false };
-                    list.Items.Add(new ListItem
-                    {
-                        Content = itemContent,
-                        Runs = ParseInlineFormatting(itemContent)
-                    });
-                    doc.Blocks.Add(list);
-                }
-                i++;
-                continue;
-            }
-
-            // 有序列表项
-            var orderedListMatch = Regex.Match(line, @"^(\s*)(\d+)\.\s+(.+)");
-            if (orderedListMatch.Success)
-            {
-                if (currentParagraph.Length > 0)
-                {
-                    var content = currentParagraph.ToString().Trim();
-                    doc.Blocks.Add(new ParagraphBlock
-                    {
-                        Content = content,
-                        Runs = ParseInlineFormatting(content)
-                    });
-                    currentParagraph.Clear();
-                }
-
-                var itemContent = orderedListMatch.Groups[3].Value;
-                var order = int.Parse(orderedListMatch.Groups[2].Value);
-                if (doc.Blocks.Count > 0 && doc.Blocks[^1] is ListBlock lb2 && lb2.IsOrdered)
-                {
-                    lb2.Items.Add(new ListItem
-                    {
-                        Order = order,
-                        Content = itemContent,
-                        Runs = ParseInlineFormatting(itemContent)
-                    });
-                }
-                else
-                {
-                    var list = new ListBlock { IsOrdered = true };
-                    list.Items.Add(new ListItem
-                    {
-                        Order = order,
-                        Content = itemContent,
-                        Runs = ParseInlineFormatting(itemContent)
-                    });
-                    doc.Blocks.Add(list);
-                }
-                i++;
-                continue;
-            }
-
-            // 分隔线
-            if (Regex.IsMatch(trimmedLine, @"^(-{3,}|\*{3,}|_{3,})$"))
-            {
-                if (currentParagraph.Length > 0)
-                {
-                    var content = currentParagraph.ToString().Trim();
-                    doc.Blocks.Add(new ParagraphBlock
-                    {
-                        Content = content,
-                        Runs = ParseInlineFormatting(content)
-                    });
-                    currentParagraph.Clear();
-                }
-
-                doc.Blocks.Add(new HorizontalRuleBlock());
-                i++;
-                continue;
-            }
-
-            // 引用
-            var quoteMatch = Regex.Match(line, @"^>\s*(.*)");
-            if (quoteMatch.Success)
-            {
-                if (currentParagraph.Length > 0)
-                {
-                    var content = currentParagraph.ToString().Trim();
-                    doc.Blocks.Add(new ParagraphBlock
-                    {
-                        Content = content,
-                        Runs = ParseInlineFormatting(content)
-                    });
-                    currentParagraph.Clear();
-                }
-
-                // 尝试合并到已有 QuoteBlock
-                var quoteContent = quoteMatch.Groups[1].Value;
-                if (doc.Blocks.Count > 0 && doc.Blocks[^1] is QuoteBlock qb)
-                {
-                    qb.Runs.Add(new InlineRun { Text = "\n" });
-                    qb.Runs.AddRange(ParseInlineFormatting(quoteContent));
-                    qb.Content += "\n" + quoteContent;
-                }
-                else
-                {
-                    doc.Blocks.Add(new QuoteBlock
-                    {
-                        Content = quoteContent,
-                        Runs = ParseInlineFormatting(quoteContent)
-                    });
-                }
-                i++;
+                i = nextIndex;
                 continue;
             }
 
@@ -264,15 +62,7 @@ public static class SemanticDocumentConverter
         }
 
         // 最后一段
-        if (currentParagraph.Length > 0)
-        {
-            var content = currentParagraph.ToString().Trim();
-            doc.Blocks.Add(new ParagraphBlock
-            {
-                Content = content,
-                Runs = ParseInlineFormatting(content)
-            });
-        }
+        FlushParagraph(doc, currentParagraph);
 
         return doc;
     }
@@ -356,6 +146,244 @@ public static class SemanticDocumentConverter
         text = Regex.Replace(text, @"~~(.+?)~~", "$1");
         text = Regex.Replace(text, @"`(.+?)`", "$1");
         return text.Trim();
+    }
+
+    // ==================== 前置处理（C5 拆分） ====================
+
+    /// <summary>跳过 frontmatter 与 AI_AGENT_NOTICE 注释块，返回第一个有效行索引</summary>
+    private static int SkipPreamble(string[] lines)
+    {
+        int i = 0;
+
+        // 跳过 frontmatter
+        if (lines.Length > 0 && lines[0].Trim() == "---")
+        {
+            i = 1;
+            while (i < lines.Length && lines[i].Trim() != "---") i++;
+            i++; // skip closing ---
+        }
+
+        // 跳过 AI_AGENT_NOTICE 块
+        while (i < lines.Length && lines[i].Trim().StartsWith("<!--")) i++;
+
+        return i;
+    }
+
+    /// <summary>将累积的普通段落文本刷新为 ParagraphBlock（若无内容则忽略）</summary>
+    private static void FlushParagraph(SemanticDocument doc, System.Text.StringBuilder currentParagraph)
+    {
+        if (currentParagraph.Length <= 0)
+            return;
+
+        var content = currentParagraph.ToString().Trim();
+        doc.Blocks.Add(new ParagraphBlock
+        {
+            Content = content,
+            Runs = ParseInlineFormatting(content)
+        });
+        currentParagraph.Clear();
+    }
+
+    private static bool IsHtmlComment(string trimmedLine)
+    {
+        return trimmedLine.StartsWith("<!--");
+    }
+
+    /// <summary>
+    /// 跳过 HTML 注释（单行 + 多行），返回注释之后的下一个行索引。
+    /// 调用前提：<paramref name="i"/> 指向注释起始行。
+    /// </summary>
+    private static int SkipHtmlComment(string[] lines, int i)
+    {
+        if (lines[i].Trim().EndsWith("-->"))
+            return i + 1;
+
+        i++;
+        while (i < lines.Length && !lines[i].Contains("-->"))
+        {
+            i++;
+        }
+        return i < lines.Length ? i + 1 : i;
+    }
+
+    // ==================== 语义块解析（C5 拆分） ====================
+
+    /// <summary>解析标题（# ~ ######）</summary>
+    private static bool TryParseHeading(SemanticDocument doc, System.Text.StringBuilder paragraph,
+        string line, int currentIndex, out int nextIndex)
+    {
+        var match = HeadingPattern.Match(line);
+        if (!match.Success)
+        {
+            nextIndex = -1;
+            return false;
+        }
+
+        FlushParagraph(doc, paragraph);
+
+        var headingContent = match.Groups[2].Value.Trim();
+        doc.Blocks.Add(new HeadingBlock
+        {
+            Level = match.Groups[1].Value.Length,
+            Content = headingContent,
+            Runs = ParseInlineFormatting(headingContent)
+        });
+
+        nextIndex = currentIndex + 1;
+        return true;
+    }
+
+    /// <summary>解析表格（连续 | 开头行）</summary>
+    private static bool TryParseTable(SemanticDocument doc, System.Text.StringBuilder paragraph,
+        string[] lines, int i, string trimmedLine, out int nextIndex)
+    {
+        if (!trimmedLine.StartsWith("|"))
+        {
+            nextIndex = -1;
+            return false;
+        }
+
+        FlushParagraph(doc, paragraph);
+
+        var tableLines = new List<string>();
+        while (i < lines.Length && lines[i].TrimStart().StartsWith("|"))
+        {
+            tableLines.Add(lines[i]);
+            i++;
+        }
+
+        doc.Blocks.Add(ParseTable(tableLines));
+        nextIndex = i;
+        return true;
+    }
+
+    /// <summary>解析无序列表项（- * + 开头）</summary>
+    private static bool TryParseUnorderedList(SemanticDocument doc, System.Text.StringBuilder paragraph,
+        string line, int currentIndex, out int nextIndex)
+    {
+        var match = UnorderedListPattern.Match(line);
+        if (!match.Success)
+        {
+            nextIndex = -1;
+            return false;
+        }
+
+        FlushParagraph(doc, paragraph);
+
+        // 尝试合并到已有 ListBlock
+        var itemContent = match.Groups[3].Value;
+        if (doc.Blocks.Count > 0 && doc.Blocks[^1] is ListBlock lb && !lb.IsOrdered)
+        {
+            lb.Items.Add(new ListItem
+            {
+                Content = itemContent,
+                Runs = ParseInlineFormatting(itemContent)
+            });
+        }
+        else
+        {
+            var list = new ListBlock { IsOrdered = false };
+            list.Items.Add(new ListItem
+            {
+                Content = itemContent,
+                Runs = ParseInlineFormatting(itemContent)
+            });
+            doc.Blocks.Add(list);
+        }
+
+        nextIndex = currentIndex + 1;
+        return true;
+    }
+
+    /// <summary>解析有序列表项（数字. 开头）</summary>
+    private static bool TryParseOrderedList(SemanticDocument doc, System.Text.StringBuilder paragraph,
+        string line, int currentIndex, out int nextIndex)
+    {
+        var match = OrderedListPattern.Match(line);
+        if (!match.Success)
+        {
+            nextIndex = -1;
+            return false;
+        }
+
+        FlushParagraph(doc, paragraph);
+
+        var itemContent = match.Groups[3].Value;
+        var order = int.Parse(match.Groups[2].Value);
+        if (doc.Blocks.Count > 0 && doc.Blocks[^1] is ListBlock lb && lb.IsOrdered)
+        {
+            lb.Items.Add(new ListItem
+            {
+                Order = order,
+                Content = itemContent,
+                Runs = ParseInlineFormatting(itemContent)
+            });
+        }
+        else
+        {
+            var list = new ListBlock { IsOrdered = true };
+            list.Items.Add(new ListItem
+            {
+                Order = order,
+                Content = itemContent,
+                Runs = ParseInlineFormatting(itemContent)
+            });
+            doc.Blocks.Add(list);
+        }
+
+        nextIndex = currentIndex + 1;
+        return true;
+    }
+
+    /// <summary>解析分隔线（--- / *** / ___）</summary>
+    private static bool TryParseHorizontalRule(SemanticDocument doc, System.Text.StringBuilder paragraph,
+        string trimmedLine, int currentIndex, out int nextIndex)
+    {
+        if (!HorizontalRulePattern.IsMatch(trimmedLine))
+        {
+            nextIndex = -1;
+            return false;
+        }
+
+        FlushParagraph(doc, paragraph);
+        doc.Blocks.Add(new HorizontalRuleBlock());
+
+        nextIndex = currentIndex + 1;
+        return true;
+    }
+
+    /// <summary>解析引用块（&gt; 开头），连续引用合并到同一 QuoteBlock</summary>
+    private static bool TryParseBlockquote(SemanticDocument doc, System.Text.StringBuilder paragraph,
+        string line, int currentIndex, out int nextIndex)
+    {
+        var match = QuotePattern.Match(line);
+        if (!match.Success)
+        {
+            nextIndex = -1;
+            return false;
+        }
+
+        FlushParagraph(doc, paragraph);
+
+        // 尝试合并到已有 QuoteBlock
+        var quoteContent = match.Groups[1].Value;
+        if (doc.Blocks.Count > 0 && doc.Blocks[^1] is QuoteBlock qb)
+        {
+            qb.Runs.Add(new InlineRun { Text = "\n" });
+            qb.Runs.AddRange(ParseInlineFormatting(quoteContent));
+            qb.Content += "\n" + quoteContent;
+        }
+        else
+        {
+            doc.Blocks.Add(new QuoteBlock
+            {
+                Content = quoteContent,
+                Runs = ParseInlineFormatting(quoteContent)
+            });
+        }
+
+        nextIndex = currentIndex + 1;
+        return true;
     }
 
     /// <summary>解析 Markdown 表格行</summary>

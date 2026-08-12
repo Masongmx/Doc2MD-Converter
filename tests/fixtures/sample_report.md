@@ -1,14 +1,3 @@
----
-AIGC:
-  ContentProducer: '001191110102MAD55U9H0F10002'
-  ContentPropagator: '001191110102MAD55U9H0F10002'
-  Label: '1'
-  ProduceID: '00d6977f-3459-48ca-8d8e-f22504e33535'
-  PropagateID: '00d6977f-3459-48ca-8d8e-f22504e33535'
-  ReservedCode1: '5937e266-72bf-4d01-b135-ded0ad93a295'
-  ReservedCode2: '5937e266-72bf-4d01-b135-ded0ad93a295'
----
-
 # 关于印发管理办法的通知
 
 各部门、各分公司：
@@ -42,4 +31,3 @@ AIGC:
 - 特殊情况需提前报批
 - 本办法自发布之日起施行
 
-> AI生成

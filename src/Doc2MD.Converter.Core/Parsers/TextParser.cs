@@ -24,8 +24,8 @@ public class TextParser : IDocumentParser
 
         try
         {
-            result.SourceFilePath = filePath;
-            result.SourceType = "Text";
+            result.Metadata.SourceFilePath = filePath;
+            result.Metadata.SourceType = "Text";
 
             cancellationToken.ThrowIfCancellationRequested();
             var content = TextFileReader.ReadAllText(filePath);
@@ -36,7 +36,7 @@ public class TextParser : IDocumentParser
             sb.AppendLine();
             sb.Append(content);
 
-            result.SourceFileName = Path.GetFileName(filePath);
+            result.Metadata.SourceFileName = Path.GetFileName(filePath);
             result.RawMarkdown = sb.ToString();
             result.Success = true;
             result.OutputPath = Path.Combine(outputDirectory, 

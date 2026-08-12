@@ -222,11 +222,11 @@
                                 <TextBlock Text="本地离线运行" Margin="0,6,0,0" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Text="支持文档转换、Markdown 生成、公文规范排版" Margin="0,6,0,24" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <StackPanel Orientation="Horizontal">
-                                    <Button Content="检查更新" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False"/>
+                                    <Button Content="检查更新" Style="{StaticResource SecondaryButtonStyle}" Click="CheckUpdate_Click"/>
                                     <Button Content="打开日志目录" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Click="OpenLogs_Click"/>
                                     <Button Content="查看开源许可" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Click="OpenLicenses_Click"/>
                                 </StackPanel>
-                                <TextBlock Text="当前版本暂不支持自动更新" Margin="0,10,0,0" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <TextBlock Text="启动 GitHub Releases 检查最新版本，仅提示不自动安装" Margin="0,10,0,0" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
                             </StackPanel>
                         </Border>
                     </Grid>

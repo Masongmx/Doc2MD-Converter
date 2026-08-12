@@ -77,6 +77,11 @@ public partial class SettingsDialog : Window
         MessageBox.Show("当前版本暂未内置开源许可页。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
+    private void CheckUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.CheckForUpdates();
+    }
+
     private void Save_Click(object sender, RoutedEventArgs e)
     {
         // 同步模板设置到对应的 PreviewSettings

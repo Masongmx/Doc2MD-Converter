@@ -24,7 +24,7 @@ public static class MarkdownPostProcessor
         var aigcResult = AigcWatermarkFilter.Filter(rawMarkdown);
         if (aigcResult.HasWatermark)
         {
-            conversionResult.Warnings.Add(ConversionWarning.Create(
+            conversionResult.Quality.Warnings.Add(ConversionWarning.Create(
                 "W_AIGC_WATERMARK",
                 $"检测到 AIGC 水印污染，已过滤 {aigcResult.RemovedBlocks} 处（类型: {string.Join(", ", aigcResult.DetectedTypes.Distinct())}）",
                 "全文"));
@@ -32,8 +32,8 @@ public static class MarkdownPostProcessor
         var cleanMarkdown = aigcResult.Markdown;
 
         // 0.5 公文元数据提取（v2.0 新增）
-        var govMeta = GovMetadataExtractor.Extract(cleanMarkdown, conversionResult.SourceFileName);
-        conversionResult.GovMetadata = govMeta;
+        var govMeta = GovMetadataExtractor.Extract(cleanMarkdown, conversionResult.Metadata.SourceFileName);
+        conversionResult.Metadata.GovMetadata = govMeta;
 
         var sb = new StringBuilder();
 
@@ -82,28 +82,28 @@ public static class MarkdownPostProcessor
     {
         sb.AppendLine("---");
 
-        if (!string.IsNullOrEmpty(result.SourceFilePath))
-            sb.AppendLine($"source_file: \"{EscapeYaml(Path.GetFileName(result.SourceFilePath))}\"");
+        if (!string.IsNullOrEmpty(result.Metadata.SourceFilePath))
+            sb.AppendLine($"source_file: \"{EscapeYaml(Path.GetFileName(result.Metadata.SourceFilePath))}\"");
 
-        if (!string.IsNullOrEmpty(result.SourceType))
-            sb.AppendLine($"source_type: \"{result.SourceType}\"");
+        if (!string.IsNullOrEmpty(result.Metadata.SourceType))
+            sb.AppendLine($"source_type: \"{result.Metadata.SourceType}\"");
 
-        if (result.SourceFileSize > 0)
-            sb.AppendLine($"source_size: {result.SourceFileSize}");
+        if (result.Metadata.SourceFileSize > 0)
+            sb.AppendLine($"source_size: {result.Metadata.SourceFileSize}");
 
-        if (!string.IsNullOrEmpty(result.SourceFileHashSha256))
-            sb.AppendLine($"source_sha256: \"{result.SourceFileHashSha256}\"");
+        if (!string.IsNullOrEmpty(result.Metadata.SourceFileHashSha256))
+            sb.AppendLine($"source_sha256: \"{result.Metadata.SourceFileHashSha256}\"");
 
-        if (result.PageCount > 0)
-            sb.AppendLine($"page_count: {result.PageCount}");
+        if (result.Metadata.PageCount > 0)
+            sb.AppendLine($"page_count: {result.Metadata.PageCount}");
 
-        if (result.SheetCount > 0)
-            sb.AppendLine($"sheet_count: {result.SheetCount}");
+        if (result.Metadata.SheetCount > 0)
+            sb.AppendLine($"sheet_count: {result.Metadata.SheetCount}");
 
-        if (result.SlideCount > 0)
-            sb.AppendLine($"slide_count: {result.SlideCount}");
+        if (result.Metadata.SlideCount > 0)
+            sb.AppendLine($"slide_count: {result.Metadata.SlideCount}");
 
-        sb.AppendLine($"ocr_used: {result.OcrUsed.ToString().ToLowerInvariant()}");
+        sb.AppendLine($"ocr_used: {result.Metadata.OcrUsed.ToString().ToLowerInvariant()}");
         sb.AppendLine($"converted_at: \"{DateTimeOffset.Now:O}\"");
         sb.AppendLine($"converter: \"{Doc2MD.Constants.AppVersion.Converter}\"");
 
@@ -155,18 +155,18 @@ public static class MarkdownPostProcessor
 
     private static void AppendAgentNotice(StringBuilder sb, ConversionResult result)
     {
-        if (result.Warnings.Count == 0 && !result.OcrUsed)
+        if (result.Quality.Warnings.Count == 0 && !result.Metadata.OcrUsed)
             return;
 
         sb.AppendLine("<!-- AI_AGENT_NOTICE: START -->");
         sb.AppendLine("<!-- 此文档由机器自动转换生成，部分内容可能存在丢失或降级，请参阅 .quality_report.json 获取详情 -->");
 
-        if (result.OcrUsed)
+        if (result.Metadata.OcrUsed)
         {
             sb.AppendLine("<!-- OCR_MODE: 原文档无可提取文字，已使用 OCR 识别，结果可能不够准确 -->");
         }
 
-        foreach (var warning in result.Warnings)
+        foreach (var warning in result.Quality.Warnings)
         {
             var loc = string.IsNullOrEmpty(warning.Location) ? "" : $" @ {warning.Location}";
             sb.AppendLine($"<!-- WARNING: [{warning.Code}] {warning.Message}{loc} -->");

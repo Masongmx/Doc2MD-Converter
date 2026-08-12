@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ===== General status text ===== -->
+  <data name="Status_Ready" xml:space="preserve"><value>Ready</value></data>
+  <data name="Status_Generating" xml:space="preserve"><value>Generating</value></data>
+  <data name="Status_Generated" xml:space="preserve"><value>Completed</value></data>
+  <data name="Status_Cancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="Status_PartiallyFailed" xml:space="preserve"><value>Partially failed</value></data>
+  <data name="Status_Cancelling" xml:space="preserve"><value>Cancelling...</value></data>
+  <data name="Status_Interrupted" xml:space="preserve"><value>Processing interrupted</value></data>
+  <data name="Status_ListCleared" xml:space="preserve"><value>File list cleared</value></data>
+  <data name="Status_NoNewFiles" xml:space="preserve"><value>No new files added</value></data>
+  <data name="Status_ScanFailed" xml:space="preserve"><value>Scan failed</value></data>
+  <data name="Status_ScanCancelled" xml:space="preserve"><value>Scan cancelled</value></data>
+
+  <data name="Action_Verb_ToMarkdown" xml:space="preserve"><value>Generating Markdown</value></data>
+  <data name="Action_Verb_ToDocx" xml:space="preserve"><value>Generating DOCX</value></data>
+  <data name="Action_Verb_Format" xml:space="preserve"><value>Formatting</value></data>
+
+  <data name="Progress_NoTasks" xml:space="preserve"><value>No tasks</value></data>
+  <data name="Progress_PartiallyFailed" xml:space="preserve"><value>Partially failed: {0} succeeded, {1} failed</value></data>
+  <data name="Progress_Completed" xml:space="preserve"><value>Completed: {0} / {1}</value></data>
+  <data name="Progress_Processing" xml:space="preserve"><value>{0}: {1} / {2}</value></data>
+
+  <!-- ===== Mode text ===== -->
+  <data name="Mode_ToMarkdown_Title" xml:space="preserve"><value>Documents to Markdown</value></data>
+  <data name="Mode_ToMarkdown_Desc" xml:space="preserve"><value>Supports PDF / Word / Excel / PPT</value></data>
+  <data name="Mode_ToMarkdown_Detail" xml:space="preserve"><value>Local parsing, extract text content</value></data>
+  <data name="Mode_ToDocx_Title" xml:space="preserve"><value>Markdown to DOCX</value></data>
+  <data name="Mode_ToDocx_Desc" xml:space="preserve"><value>Generate Word documents in official format</value></data>
+  <data name="Mode_ToDocx_Detail" xml:space="preserve"><value>Batch conversion, fast and stable</value></data>
+  <data name="Mode_Format_Title" xml:space="preserve"><value>One-click Formatting</value></data>
+  <data name="Mode_Format_Desc" xml:space="preserve"><value>Unify fonts, headings, paragraphs and margins</value></data>
+  <data name="Mode_Format_Detail" xml:space="preserve"><value>Standardized formatting, better quality</value></data>
+
+  <data name="Button_AddFiles" xml:space="preserve"><value>Add Files</value></data>
+  <data name="Button_AddMarkdown" xml:space="preserve"><value>Add Markdown</value></data>
+  <data name="Button_AddWord" xml:space="preserve"><value>Add Word</value></data>
+  <data name="Button_GenerateMarkdown" xml:space="preserve"><value>Generate Markdown</value></data>
+  <data name="Button_GenerateDocx" xml:space="preserve"><value>Generate DOCX</value></data>
+  <data name="Button_StartFormat" xml:space="preserve"><value>Start Formatting</value></data>
+  <data name="Button_OpenOutputDir" xml:space="preserve"><value>Open Output Directory</value></data>
+  <data name="Button_RetryFailed" xml:space="preserve"><value>Retry Failed ({0})</value></data>
+
+  <data name="DropZone_ToMarkdown_Title" xml:space="preserve"><value>Drag documents or folders here</value></data>
+  <data name="DropZone_ToDocx_Title" xml:space="preserve"><value>Drag Markdown files or folders here</value></data>
+  <data name="DropZone_Format_Title" xml:space="preserve"><value>Drag Word documents or folders here</value></data>
+  <data name="DropZone_ToMarkdown_Subtitle" xml:space="preserve"><value>Supports PDF / Word / Excel / PPT</value></data>
+  <data name="DropZone_ToDocx_Subtitle" xml:space="preserve"><value>Supports .md / .markdown files</value></data>
+  <data name="DropZone_Format_Subtitle" xml:space="preserve"><value>Supports .doc / .docx files</value></data>
+  <data name="DropZone_Footnote" xml:space="preserve"><value>Or use the buttons above to add files</value></data>
+  <data name="DropZone_DragActive" xml:space="preserve"><value>Release to add files</value></data>
+
+  <data name="FileLabel_Document" xml:space="preserve"><value>documents</value></data>
+  <data name="FileLabel_Markdown" xml:space="preserve"><value>Markdown files</value></data>
+  <data name="FileLabel_Word" xml:space="preserve"><value>Word files</value></data>
+
+  <!-- ===== Toast notifications ===== -->
+  <data name="Toast_ConversionDone" xml:space="preserve"><value>Conversion complete, saved to output directory</value></data>
+  <data name="Toast_PartiallyFailed" xml:space="preserve"><value>Some files failed to convert, check the task list</value></data>
+  <data name="Toast_NoProcessableFiles" xml:space="preserve"><value>No processable files</value></data>
+  <data name="Toast_ListClearedUndo" xml:space="preserve"><value>Cleared {0} files, undo available</value></data>
+  <data name="Toast_NothingToUndo" xml:space="preserve"><value>Nothing to undo</value></data>
+  <data name="Toast_ListRestored" xml:space="preserve"><value>File list restored</value></data>
+  <data name="Status_ListRestored" xml:space="preserve"><value>File list restored</value></data>
+  <data name="Toast_AddedFiles" xml:space="preserve"><value>Added {0} files</value></data>
+  <data name="Toast_SkippedDuplicates" xml:space="preserve"><value>Skipped {0} duplicate files</value></data>
+  <data name="Toast_UnsupportedRetained" xml:space="preserve"><value>Retained {0} unsupported files</value></data>
+  <data name="Toast_LegacyNeedLibreOffice" xml:space="preserve"><value>Detected {0} legacy format files (.doc/.xls/.ppt); LibreOffice is required to convert</value></data>
+  <data name="Toast_FolderLegacyNeedLibreOffice" xml:space="preserve"><value>Folder contains legacy format files (.doc/.xls/.ppt); LibreOffice is required to convert</value></data>
+  <data name="Toast_ConfigCorrupted" xml:space="preserve"><value>Configuration file was corrupted and has been reset to defaults</value></data>
+  <data name="Toast_CopiedErrorInfo" xml:space="preserve"><value>Error information copied</value></data>
+  <data name="Toast_OutputDirUpdated" xml:space="preserve"><value>Output directory updated</value></data>
+  <data name="Toast_OutputDirCreated" xml:space="preserve"><value>Output directory did not exist and was created automatically</value></data>
+  <data name="Toast_SelectOutputDir" xml:space="preserve"><value>Please select an output directory; defaults to source file location</value></data>
+  <data name="Toast_FolderNotExist" xml:space="preserve"><value>The selected folder does not exist</value></data>
+  <data name="Toast_ScanFailed" xml:space="preserve"><value>Folder scan failed, check the logs</value></data>
+  <data name="Toast_MarkedForRetry" xml:space="preserve"><value>Marked {0} for retry</value></data>
+  <data name="Toast_RemovedFiles" xml:space="preserve"><value>Removed {0} files</value></data>
+  <data name="Toast_CheckingUpdate" xml:space="preserve"><value>Checking for updates...</value></data>
+  <data name="Toast_UpdateCheckFailed" xml:space="preserve"><value>Update check failed, please retry later</value></data>
+  <data name="Toast_UpToDate" xml:space="preserve"><value>You are up to date ({0})</value></data>
+  <data name="Dialog_UpdateAvailable" xml:space="preserve"><value>A new version {0} is available (current {1}).&#10;&#10;Download: {2}&#10;&#10;Open the download page?</value></data>
+  <data name="Dialog_UpdateTitle" xml:space="preserve"><value>Update Available</value></data>
+  <data name="Toast_CopySoftwareInfo" xml:space="preserve"><value>Software information copied</value></data>
+  <data name="Toast_CopiedOutputPath" xml:space="preserve"><value>Output path copied</value></data>
+  <data name="Toast_CopyFailed" xml:space="preserve"><value>Copy failed, please retry</value></data>
+  <data name="Toast_SettingsSaved" xml:space="preserve"><value>Settings saved</value></data>
+  <data name="Toast_OpenPathFailed" xml:space="preserve"><value>Failed to open path, check the logs</value></data>
+
+  <!-- ===== Scan status text ===== -->
+  <data name="Scan_PrimaryScanning" xml:space="preserve"><value>Scanning folder...</value></data>
+  <data name="Scan_SecondaryDefault" xml:space="preserve"><value>Identifying files and subdirectories</value></data>
+  <data name="Scan_SecondaryProgress" xml:space="preserve"><value>Found {0} files, {1} processable</value></data>
+  <data name="Scan_StatusSwitching" xml:space="preserve"><value>Switching folder...</value></data>
+  <data name="Scan_StatusRefreshing" xml:space="preserve"><value>Refreshing folder...</value></data>
+  <data name="Scan_LoadedMessage" xml:space="preserve"><value>Loaded {0} {1}</value></data>
+  <data name="Scan_IgnoredUnsupported" xml:space="preserve"><value>Ignored {0} unsupported files</value></data>
+  <data name="Scan_Truncated" xml:space="preserve"><value>Scan limit reached, loaded first {0} files ({1} processable)</value></data>
+
+  <!-- ===== Add files status ===== -->
+  <data name="Add_StatusAdded" xml:space="preserve"><value>Added {0} files</value></data>
+
+  <!-- ===== Current folder summary ===== -->
+  <data name="FolderSummary_Current" xml:space="preserve"><value>Current folder: {0}    {1} files total, {2} processable</value></data>
+  <data name="FolderSummary_Added" xml:space="preserve"><value>Added {0} files</value></data>
+
+  <!-- ===== File dialogs ===== -->
+  <data name="Dialog_OutputDirTitle" xml:space="preserve"><value>Select Output Directory</value></data>
+  <data name="Dialog_FolderTitle" xml:space="preserve"><value>Select Folder</value></data>
+  <data name="Dialog_OutputDirNotExist" xml:space="preserve"><value>Output directory does not exist. Create it?</value></data>
+  <data name="Dialog_CreateOutputDir" xml:space="preserve"><value>Create Output Directory</value></data>
+  <data name="Dialog_ClearConfirm" xml:space="preserve"><value>Clear the file list?</value></data>
+
+  <!-- ===== File dialog filters ===== -->
+  <data name="Filter_Markdown" xml:space="preserve"><value>Markdown files</value></data>
+  <data name="Filter_Word" xml:space="preserve"><value>Word documents</value></data>
+  <data name="Filter_SupportedDocs" xml:space="preserve"><value>Supported documents</value></data>
+  <data name="Filter_AllFiles" xml:space="preserve"><value>All files</value></data>
+
+  <!-- ===== Software info ===== -->
+  <data name="SoftwareInfo_LocalOffline" xml:space="preserve"><value>Runs locally, offline</value></data>
+  <data name="SoftwareInfo_LogDir" xml:space="preserve"><value>Log directory: {0}</value></data>
+  <data name="SoftwareInfo_Template" xml:space="preserve"><value>Doc2MD Converter {0}{1}Runs locally, offline{1}Log directory: {2}</value></data>
+
+  <!-- ===== First-run onboarding (P1) ===== -->
+  <data name="Onboarding_Title" xml:space="preserve"><value>Welcome to Doc2MD Converter</value></data>
+  <data name="Onboarding_Subtitle" xml:space="preserve"><value>A local, offline and secure document converter</value></data>
+  <data name="Onboarding_Step1_Title" xml:space="preserve"><value>Choose what you want to do</value></data>
+  <data name="Onboarding_Step1_Desc" xml:space="preserve"><value>The three cards at the top correspond to three modes. Click to switch.</value></data>
+  <data name="Onboarding_Step2_Title" xml:space="preserve"><value>Add files and process in one click</value></data>
+  <data name="Onboarding_Step2_Desc" xml:space="preserve"><value>Click "Add Files" or drag files into the area on the right to start batch processing.</value></data>
+  <data name="Onboarding_Step3_Title" xml:space="preserve"><value>Open the output directory when done</value></data>
+  <data name="Onboarding_Step3_Desc" xml:space="preserve"><value>After conversion you can open the output directory or copy a file's output path in one click.</value></data>
+  <data name="Onboarding_Start" xml:space="preserve"><value>Get Started</value></data>
+  <data name="Onboarding_Skip" xml:space="preserve"><value>Skip tutorial</value></data>
+
+  <!-- ===== Conversion preview (F2) ===== -->
+  <data name="Button_Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="Button_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Preview_PanelTitle" xml:space="preserve"><value>Preview</value></data>
+  <data name="Preview_Empty" xml:space="preserve"><value>Select a Markdown file in the list to preview the converted result</value></data>
+  <data name="Preview_NotMarkdown" xml:space="preserve"><value>Only Markdown files support preview</value></data>
+  <data name="Preview_FileMissing" xml:space="preserve"><value>The source file no longer exists</value></data>
+  <data name="Preview_RenderFailed" xml:space="preserve"><value>Failed to render preview</value></data>
+</root>

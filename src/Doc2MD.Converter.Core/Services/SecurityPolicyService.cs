@@ -46,13 +46,32 @@ public static class SecurityPolicyService
         return !policy.AllowOverwrite && File.Exists(outputPath);
     }
 
+    /// <summary>Windows 保留设备名（不可作为文件名，否则创建/访问会失败或产生安全隐患）</summary>
+    private static readonly HashSet<string> ReservedDeviceNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "CON", "PRN", "AUX", "NUL",
+        "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+        "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
+    };
+
     /// <summary>
-    /// 清理文件名，防止路径穿越（去除 .. 和绝对路径组件）
+    /// 清理文件名，防止路径穿越（去除 .. 和绝对路径组件），
+    /// 并对 Windows 保留设备名（CON/NUL/AUX/COM1-9/LPT1-9）添加下划线前缀，
+    /// 避免生成无法写入或指向设备端口的文件名。
     /// </summary>
     public static string SanitizeFileName(string fileName)
     {
         var safeName = Path.GetFileName(fileName);
-        return safeName.Trim().Trim('.');
+        safeName = safeName.Trim().Trim('.');
+
+        // 含扩展名的保留名同样受限（如 "CON.txt"），需检查不含扩展名的部分
+        var nameWithoutExt = Path.GetFileNameWithoutExtension(safeName);
+        if (ReservedDeviceNames.Contains(nameWithoutExt))
+        {
+            safeName = "_" + safeName;
+        }
+
+        return safeName;
     }
 
     /// <summary>

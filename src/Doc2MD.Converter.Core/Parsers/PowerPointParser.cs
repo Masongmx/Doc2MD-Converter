@@ -27,8 +27,8 @@ public class PowerPointParser : IDocumentParser
 
         try
         {
-            result.SourceFilePath = filePath;
-            result.SourceType = "PowerPoint";
+            result.Metadata.SourceFilePath = filePath;
+            result.Metadata.SourceType = "PowerPoint";
 
             var ext = Path.GetExtension(filePath).ToLowerInvariant();
             if (ext == ".ppt")
@@ -141,12 +141,12 @@ public class PowerPointParser : IDocumentParser
                 slideNumber++;
             }
 
-            result.SlideCount = slideNumber - 1;
+            result.Metadata.SlideCount = slideNumber - 1;
 
             // 图片存在但提取全部失败时警告
             if (hasImages && result.ImageExports.Count == 0)
             {
-                result.Warnings.Add(ConversionWarning.Create(
+                result.Quality.Warnings.Add(ConversionWarning.Create(
                     "W_IMG_LOST", "PPT 演示文稿包含图片，但提取失败"));
                 sb.AppendLine("<!-- IMAGE_PLACEHOLDER: PPT 演示文稿包含嵌入式图片，提取失败 -->");
             }
@@ -171,13 +171,13 @@ public class PowerPointParser : IDocumentParser
             }
 
             if (hasChart)
-                result.Warnings.Add(ConversionWarning.Create(
+                result.Quality.Warnings.Add(ConversionWarning.Create(
                     "W_CHART_LOST", "PPT 演示文稿包含图表，暂不支持提取"));
             if (hasEmbedded)
-                result.Warnings.Add(ConversionWarning.Create(
+                result.Quality.Warnings.Add(ConversionWarning.Create(
                     "W_EMBEDDED_OBJECT_LOST", "PPT 演示文稿包含嵌入对象，暂不支持提取"));
 
-            result.SourceFileName = Path.GetFileName(filePath);
+            result.Metadata.SourceFileName = Path.GetFileName(filePath);
             result.RawMarkdown = sb.ToString();
             result.Success = true;
             result.OutputPath = Path.Combine(outputDirectory, 

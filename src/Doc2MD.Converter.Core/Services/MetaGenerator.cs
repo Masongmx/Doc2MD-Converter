@@ -21,16 +21,16 @@ public static class MetaGenerator
     {
         var meta = new DocumentMeta
         {
-            SourceFile = Path.GetFileName(result.SourceFilePath),
-            SourceType = result.SourceType,
-            SourceSizeBytes = result.SourceFileSize > 0 ? result.SourceFileSize : null,
-            SourceSha256 = result.SourceFileHashSha256,
-            PageCount = result.PageCount > 0 ? result.PageCount : null,
-            SheetCount = result.SheetCount > 0 ? result.SheetCount : null,
-            SlideCount = result.SlideCount > 0 ? result.SlideCount : null,
-            OcrUsed = result.OcrUsed,
-            BlockCount = result.BlockCount,
-            UnsupportedObjectCount = result.UnsupportedObjectCount,
+            SourceFile = Path.GetFileName(result.Metadata.SourceFilePath),
+            SourceType = result.Metadata.SourceType,
+            SourceSizeBytes = result.Metadata.SourceFileSize > 0 ? result.Metadata.SourceFileSize : null,
+            SourceSha256 = result.Metadata.SourceFileHashSha256,
+            PageCount = result.Metadata.PageCount > 0 ? result.Metadata.PageCount : null,
+            SheetCount = result.Metadata.SheetCount > 0 ? result.Metadata.SheetCount : null,
+            SlideCount = result.Metadata.SlideCount > 0 ? result.Metadata.SlideCount : null,
+            OcrUsed = result.Metadata.OcrUsed,
+            BlockCount = result.Quality.BlockCount,
+            UnsupportedObjectCount = result.Quality.UnsupportedObjectCount,
             ConvertedAt = DateTimeOffset.Now,
             Converter = Doc2MD.Constants.AppVersion.Converter
         };

@@ -1,14 +1,3 @@
----
-AIGC:
-  ContentProducer: '001191110102MAD55U9H0F10002'
-  ContentPropagator: '001191110102MAD55U9H0F10002'
-  Label: '1'
-  ProduceID: 'b61e3a49-b154-4fd9-937c-9c13cce83541'
-  PropagateID: 'b61e3a49-b154-4fd9-937c-9c13cce83541'
-  ReservedCode1: 'df4af223-2f22-4d59-8a8d-2048f762a0f2'
-  ReservedCode2: 'df4af223-2f22-4d59-8a8d-2048f762a0f2'
----
-
 # 巡察情况报告
 
 根据工作安排，巡察组于2026年7月对相关单位进行了巡察，现将情况报告如下。
@@ -41,4 +30,3 @@ AIGC:
 - 定期跟踪整改进度
 - 整改报告于30日内提交
 
-> AI生成

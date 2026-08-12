@@ -36,8 +36,8 @@ public class WordParser : IDocumentParser
 
         try
         {
-            result.SourceFilePath = filePath;
-            result.SourceType = "Word";
+            result.Metadata.SourceFilePath = filePath;
+            result.Metadata.SourceType = "Word";
 
             var ext = Path.GetExtension(filePath).ToLowerInvariant();
             if (ext == ".doc")
@@ -60,7 +60,7 @@ public class WordParser : IDocumentParser
                         var parsedResult = Parse(comResult.ConvertedPath!, outputDirectory, cancellationToken);
                         if (parsedResult.Success)
                         {
-                            parsedResult.Warnings.Add(ConversionWarning.Create(
+                            parsedResult.Quality.Warnings.Add(ConversionWarning.Create(
                                 "W_LEGACY_FALLBACK",
                                 ".doc 文件通过 Word COM 自动化转换（LibreOffice 不可用），格式保真度可能略有差异",
                                 "全文"));
@@ -140,14 +140,14 @@ public class WordParser : IDocumentParser
             // 检测脚注/尾注
             if (mainPart.FootnotesPart != null || mainPart.EndnotesPart != null)
             {
-                result.Warnings.Add(ConversionWarning.Create(
+                result.Quality.Warnings.Add(ConversionWarning.Create(
                     "W_FOOTNOTE_LOST", "Word 文档包含脚注/尾注，暂不支持提取"));
             }
 
             // 检测批注
             if (mainPart.WordprocessingCommentsPart != null)
             {
-                result.Warnings.Add(ConversionWarning.Create(
+                result.Quality.Warnings.Add(ConversionWarning.Create(
                     "W_COMMENT_LOST", "Word 文档包含批注，暂不支持提取"));
             }
 
@@ -163,7 +163,7 @@ public class WordParser : IDocumentParser
                 .ToList();
             if (revisions.Count > 0)
             {
-                result.Warnings.Add(ConversionWarning.Create(
+                result.Quality.Warnings.Add(ConversionWarning.Create(
                     "W_REVISION_LOST",
                     $"Word 文档包含 {revisions.Count} 处修订标记，暂不支持提取修订信息"));
             }
@@ -171,7 +171,7 @@ public class WordParser : IDocumentParser
             // 检测嵌入对象（OLE / 包）
             if (mainPart.Parts.Any(p => p.OpenXmlPart is EmbeddedObjectPart || p.OpenXmlPart is EmbeddedPackagePart))
             {
-                result.Warnings.Add(ConversionWarning.Create(
+                result.Quality.Warnings.Add(ConversionWarning.Create(
                     "W_EMBEDDED_OBJECT_LOST",
                     "Word 文档包含嵌入对象（OLE/包），暂不支持提取"));
             }
@@ -206,13 +206,13 @@ public class WordParser : IDocumentParser
             else if (hasImageParts)
             {
                 // 图片存在但提取全部失败
-                result.Warnings.Add(ConversionWarning.Create(
+                result.Quality.Warnings.Add(ConversionWarning.Create(
                     "W_IMG_LOST", "Word 文档包含嵌入式图片，但提取失败"));
                 sb.AppendLine();
                 sb.AppendLine("<!-- IMAGE_PLACEHOLDER: Word 文档包含嵌入式图片，提取失败 -->");
             }
 
-            result.SourceFileName = Path.GetFileName(filePath);
+            result.Metadata.SourceFileName = Path.GetFileName(filePath);
             result.RawMarkdown = sb.ToString();
             result.Success = true;
             result.OutputPath = Path.Combine(outputDirectory,

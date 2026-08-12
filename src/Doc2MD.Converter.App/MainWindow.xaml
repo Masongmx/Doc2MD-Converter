@@ -5,18 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:vm="clr-namespace:Doc2MD.ViewModels"
+        xmlns:controls="clr-namespace:Doc2MD.Controls"
         mc:Ignorable="d"
         Title="Doc2MD Converter"
         Width="1280"
         Height="760"
         MinWidth="1100"
         MinHeight="680"
-        Background="Transparent"
+        Background="{DynamicResource BgMainBrush}"
         Icon="pack://application:,,,/Assets/DocProcessorIcon.ico"
         WindowStyle="None"
         ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen"
-        AllowsTransparency="True"
         AllowDrop="True"
         Drop="Window_Drop"
         DragOver="Window_DragOver"
@@ -25,17 +25,14 @@
         <shell:WindowChrome CaptionHeight="52"
                             CornerRadius="12"
                             GlassFrameThickness="0"
-                            ResizeBorderThickness="6"/>
+                            ResizeBorderThickness="6"
+                            NonClientFrameEdges="None"/>
     </shell:WindowChrome.WindowChrome>
 
-    <Window.DataContext>
-        <vm:MainViewModel/>
-    </Window.DataContext>
-
     <!-- v3: Single unified container with visible rounded border -->
+    <!-- AllowsTransparency removed for GPU-accelerated rendering; use WindowChrome for frame control -->
     <Border Background="{DynamicResource BgCardBrush}"
             CornerRadius="12"
-            Margin="12"
             BorderBrush="{DynamicResource BorderStrongBrush}"
             BorderThickness="1"
             Padding="0,0,0,4"
@@ -125,105 +122,38 @@
             <!-- ====== DIVIDER below header ====== -->
             <Border Grid.Row="1" Height="1" Background="{DynamicResource DividerBrush}" Margin="24,0"/>
 
-            <!-- ====== MODE CARDS (document-shaped icons with corner fold) ====== -->
+            <!-- ====== MODE CARDS (U7: 提取为 ModeCard UserControl) ====== -->
             <UniformGrid Grid.Row="2" Columns="3" Margin="24,12,24,12">
-                <Button Click="ModeToMarkdown_Click" IsEnabled="{Binding CanChangeMode}" Margin="0,0,6,0">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource ModeCardStyle}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedModeIndex}" Value="0">
-                                    <Setter Property="Background" Value="{DynamicResource BgActiveBrush}"/>
-                                    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
-                                    <Setter Property="BorderThickness" Value="2"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <!-- Document-shaped icon with "M" label and corner fold -->
-                        <Grid Width="42" Height="52" Margin="0,0,14,0">
-                            <Border Background="{DynamicResource BgCardBrush}" CornerRadius="4" BorderBrush="{DynamicResource ModeIconBorderBrush}" BorderThickness="1.5"/>
-                            <!-- Corner fold (top-right) -->
-                            <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="10" Height="10" Background="{DynamicResource ModeIconCornerBrush}">
-                                <Border CornerRadius="0,4,0,4" Background="{DynamicResource ModeIconCornerBrush}"/>
-                            </Border>
-                            <TextBlock Text="M" Foreground="{DynamicResource PrimaryBrush}" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,2,0,0"/>
-                        </Grid>
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="文档转 Markdown" FontSize="15" FontWeight="SemiBold"/>
-                            <TextBlock Text="支持 PDF / Word / Excel / PPT" Margin="0,6,0,0" FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="本地解析，提取文本内容" Margin="0,3,0,0" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
-                        </StackPanel>
-                    </Grid>
-                </Button>
-
-                <Button Click="ModeMarkdownToDocx_Click" IsEnabled="{Binding CanChangeMode}" Margin="3,0">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource ModeCardStyle}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedModeIndex}" Value="1">
-                                    <Setter Property="Background" Value="{DynamicResource BgActiveBrush}"/>
-                                    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
-                                    <Setter Property="BorderThickness" Value="2"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid Width="42" Height="52" Margin="0,0,14,0">
-                            <Border Background="{DynamicResource BgCardBrush}" CornerRadius="4" BorderBrush="{DynamicResource ModeIconBorderBrush}" BorderThickness="1.5"/>
-                            <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="10" Height="10" Background="{DynamicResource ModeIconCornerBrush}">
-                                <Border CornerRadius="0,4,0,4" Background="{DynamicResource ModeIconCornerBrush}"/>
-                            </Border>
-                            <TextBlock Text="D" Foreground="{DynamicResource PrimaryBrush}" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,2,0,0"/>
-                        </Grid>
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="Markdown 转 DOCX" FontSize="15" FontWeight="SemiBold"/>
-                            <TextBlock Text="按照公文格式生成 Word 文档" Margin="0,6,0,0" FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="批量转换，高效稳定" Margin="0,3,0,0" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
-                        </StackPanel>
-                    </Grid>
-                </Button>
-
-                <Button Click="ModeFormatDoc_Click" IsEnabled="{Binding CanChangeMode}" Margin="6,0,0,0">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource ModeCardStyle}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedModeIndex}" Value="2">
-                                    <Setter Property="Background" Value="{DynamicResource BgActiveBrush}"/>
-                                    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
-                                    <Setter Property="BorderThickness" Value="2"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid Width="42" Height="52" Margin="0,0,14,0">
-                            <Border Background="{DynamicResource BgCardBrush}" CornerRadius="4" BorderBrush="{DynamicResource ModeIconBorderBrush}" BorderThickness="1.5"/>
-                            <Border HorizontalAlignment="Right" VerticalAlignment="Top" Width="10" Height="10" Background="{DynamicResource ModeIconCornerBrush}">
-                                <Border CornerRadius="0,4,0,4" Background="{DynamicResource ModeIconCornerBrush}"/>
-                            </Border>
-                            <TextBlock Text="排" Foreground="{DynamicResource PrimaryBrush}" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,2,0,0"/>
-                        </Grid>
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="一键排版" FontSize="15" FontWeight="SemiBold"/>
-                            <TextBlock Text="统一字体、标题、段落与页边距" Margin="0,6,0,0" FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <TextBlock Text="规范化排版，提升文档质量" Margin="0,3,0,0" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
-                        </StackPanel>
-                    </Grid>
-                </Button>
+                <controls:ModeCard x:Name="ModeCard0"
+                                   ModeIndex="0"
+                                   ModeName="文档转 Markdown"
+                                   Description="支持 PDF / Word / Excel / PPT"
+                                   SubDescription="本地解析，提取文本内容"
+                                   IconText="M"
+                                   AutomationName="文档转 Markdown 模式"
+                                   Margin="0,0,6,0"
+                                   IsEnabled="{Binding CanChangeMode}"
+                                   ModeClicked="ModeCard_Click"/>
+                <controls:ModeCard x:Name="ModeCard1"
+                                   ModeIndex="1"
+                                   ModeName="Markdown 转 DOCX"
+                                   Description="按照公文格式生成 Word 文档"
+                                   SubDescription="批量转换，高效稳定"
+                                   IconText="D"
+                                   AutomationName="Markdown 转 DOCX 模式"
+                                   Margin="3,0"
+                                   IsEnabled="{Binding CanChangeMode}"
+                                   ModeClicked="ModeCard_Click"/>
+                <controls:ModeCard x:Name="ModeCard2"
+                                   ModeIndex="2"
+                                   ModeName="一键排版"
+                                   Description="统一字体、标题、段落与页边距"
+                                   SubDescription="规范化排版，提升文档质量"
+                                   IconText="排"
+                                   AutomationName="一键排版模式"
+                                   Margin="6,0,0,0"
+                                   IsEnabled="{Binding CanChangeMode}"
+                                   ModeClicked="ModeCard_Click"/>
             </UniformGrid>
 
             <!-- ====== DIVIDER below mode cards ====== -->
@@ -251,7 +181,7 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Orientation="Horizontal">
-                        <Button Style="{StaticResource DarkButtonStyle}" Click="AddFiles_Click">
+                        <Button Style="{StaticResource DarkButtonStyle}" Click="AddFiles_Click" AutomationProperties.Name="{Binding AddFileButtonText}">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <TextBlock Text="＋"
                                            FontSize="15"
@@ -264,14 +194,14 @@
                                            Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                             </StackPanel>
                         </Button>
-                        <Button Content="添加文件夹" Style="{StaticResource SecondaryButtonStyle}" Click="AddFolder_Click" Margin="8,0,0,0"/>
-                        <Button Content="清空" Style="{StaticResource GhostButtonStyle}" Click="ClearFiles_Click" Margin="8,0,0,0" IsEnabled="{Binding CanClearFiles}"/>
+                        <Button Content="添加文件夹" Style="{StaticResource SecondaryButtonStyle}" Click="AddFolder_Click" Margin="8,0,0,0" AutomationProperties.Name="添加文件夹"/>
+                        <Button Content="清空" Style="{StaticResource GhostButtonStyle}" Click="ClearFiles_Click" Margin="8,0,0,0" IsEnabled="{Binding CanClearFiles}" AutomationProperties.Name="清空文件列表"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button Content="刷新" Style="{StaticResource ToolbarSecondaryButtonStyle}" Click="RefreshFolder_Click" IsEnabled="{Binding CanUseFolderActions}"/>
-                        <Button Content="打开文件夹" Style="{StaticResource ToolbarSecondaryButtonStyle}" Click="OpenFolder_Click" Margin="8,0,0,0" IsEnabled="{Binding CanUseFolderActions}"/>
-                        <Button Content="更换文件夹" Style="{StaticResource ToolbarSecondaryButtonStyle}" Click="ChangeFolder_Click" Margin="8,0,0,0" IsEnabled="{Binding CanUseFolderActions}"/>
+                        <Button Content="刷新" Style="{StaticResource ToolbarSecondaryButtonStyle}" Click="RefreshFolder_Click" IsEnabled="{Binding CanUseFolderActions}" AutomationProperties.Name="刷新文件夹"/>
+                        <Button Content="打开文件夹" Style="{StaticResource ToolbarSecondaryButtonStyle}" Click="OpenFolder_Click" Margin="8,0,0,0" IsEnabled="{Binding CanUseFolderActions}" AutomationProperties.Name="打开当前文件夹"/>
+                        <Button Content="更换文件夹" Style="{StaticResource ToolbarSecondaryButtonStyle}" Click="ChangeFolder_Click" Margin="8,0,0,0" IsEnabled="{Binding CanUseFolderActions}" AutomationProperties.Name="更换文件夹"/>
                     </StackPanel>
                 </Grid>
 
@@ -294,8 +224,8 @@
                                    IsHitTestVisible="False"
                                    Visibility="{Binding ActiveOutputDirectory, Converter={StaticResource StringNullOrEmptyToVisibilityConverter}}"/>
                     </Grid>
-                    <Button Grid.Column="2" Content="选择" Style="{StaticResource SecondaryButtonStyle}" Click="BrowseOutput_Click" Margin="10,0,0,0"/>
-                    <Button Grid.Column="3" Content="打开" Style="{StaticResource SecondaryButtonStyle}" Click="OpenOutput_Click" Margin="8,0,0,0" IsEnabled="{Binding CanOpenOutputDirectory}"/>
+                    <Button Grid.Column="2" Content="选择" Style="{StaticResource SecondaryButtonStyle}" Click="BrowseOutput_Click" Margin="10,0,0,0" AutomationProperties.Name="选择输出目录"/>
+                    <Button Grid.Column="3" Content="打开" Style="{StaticResource SecondaryButtonStyle}" Click="OpenOutput_Click" Margin="8,0,0,0" IsEnabled="{Binding CanOpenOutputDirectory}" AutomationProperties.Name="打开输出目录"/>
                 </Grid>
 
                 <!-- Folder summary -->
@@ -327,8 +257,12 @@
                                     </Setter.Value>
                                 </Setter>
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding FileListTransitionPhase}" Value="exit">
-                                        <DataTrigger.EnterActions>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding FileListTransitionPhase}" Value="exit"/>
+                                            <Condition Binding="{Binding IsMotionOff}" Value="False"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <MultiDataTrigger.EnterActions>
                                             <BeginStoryboard>
                                                 <Storyboard>
                                                     <DoubleAnimation Storyboard.TargetProperty="Opacity"
@@ -347,10 +281,14 @@
                                                     </DoubleAnimation>
                                                 </Storyboard>
                                             </BeginStoryboard>
-                                        </DataTrigger.EnterActions>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding FileListTransitionPhase}" Value="enter">
-                                        <DataTrigger.EnterActions>
+                                        </MultiDataTrigger.EnterActions>
+                                    </MultiDataTrigger>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding FileListTransitionPhase}" Value="enter"/>
+                                            <Condition Binding="{Binding IsMotionOff}" Value="False"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <MultiDataTrigger.EnterActions>
                                             <BeginStoryboard>
                                                 <Storyboard>
                                                     <DoubleAnimation Storyboard.TargetProperty="Opacity"
@@ -371,8 +309,8 @@
                                                     </DoubleAnimation>
                                                 </Storyboard>
                                             </BeginStoryboard>
-                                        </DataTrigger.EnterActions>
-                                    </DataTrigger>
+                                        </MultiDataTrigger.EnterActions>
+                                    </MultiDataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
@@ -389,15 +327,30 @@
                                     <ColumnDefinition Width="4*" SharedSizeGroup="ColPath"/>
                                     <ColumnDefinition Width="2*" SharedSizeGroup="ColStatus"/>
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="ColAction"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="文件名" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Grid.Column="1" Text="路径" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Grid.Column="2" Text="状态" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Grid.Column="3" Text="操作" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <Button Grid.Column="4"
+                                        Content="移除选中"
+                                        Style="{StaticResource GhostButtonStyle}"
+                                        Margin="12,0,0,0"
+                                        Padding="10,4"
+                                        FontSize="12"
+                                        Click="RemoveSelected_Click"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibilityConverter}}"
+                                        AutomationProperties.Name="移除选中的文件"/>
                             </Grid>
 
                             <ListView Grid.Row="1"
+                                      x:Name="FileListView"
                                       ItemsSource="{Binding ActiveFiles}"
+                                      SelectedItem="{Binding SelectedFile}"
+                                      SelectionMode="Extended"
+                                      SelectionChanged="FileListView_SelectionChanged"
                                       Background="Transparent"
                                       BorderThickness="0"
                                       Margin="8,0,8,0"
@@ -453,12 +406,23 @@
                                             </StackPanel>
 
                                             <TextBlock Grid.Column="1"
-                                                       Text="{Binding FullPath}"
+                                                       Text="{Binding OutputPath, Converter={StaticResource OutputPathDisplayConverter}}"
                                                        Margin="8,0,8,0"
                                                        VerticalAlignment="Center"
                                                        FontSize="12.5"
                                                        Foreground="{DynamicResource TextMutedBrush}"
-                                                       TextTrimming="CharacterEllipsis"/>
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Cursor="Hand">
+                                                <TextBlock.ToolTip>
+                                                    <TextBlock Text="{Binding OutputPath, Converter={StaticResource OutputPathDisplayConverter}}" TextWrapping="Wrap" MaxWidth="420"/>
+                                                </TextBlock.ToolTip>
+                                                <TextBlock.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Header="复制输出路径" Tag="{Binding}" Click="CopyOutputPath_Click"/>
+                                                        <MenuItem Header="打开位置" Tag="{Binding}" Click="FileAction_Click" Visibility="{Binding OutputPath, Converter={StaticResource HasOutputPathVisibilityConverter}}"/>
+                                                    </ContextMenu>
+                                                </TextBlock.ContextMenu>
+                                            </TextBlock>
 
                                             <Border Grid.Column="2"
                                                     Background="{Binding Status, Converter={StaticResource FileStatusBackgroundConverter}}"
@@ -467,6 +431,11 @@
                                                     VerticalAlignment="Center"
                                                     HorizontalAlignment="Left"
                                                     ToolTip="{Binding ErrorMessage}">
+                                                <Border.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Header="复制错误信息" Click="CopyErrorMessage_Click" Tag="{Binding}"/>
+                                                    </ContextMenu>
+                                                </Border.ContextMenu>
                                                 <StackPanel Orientation="Horizontal">
                                                     <Ellipse Width="7"
                                                              Height="7"
@@ -489,7 +458,8 @@
                                                     Margin="8,0,0,0"
                                                     FontSize="12"
                                                     Tag="{Binding}"
-                                                    Click="FileAction_Click"/>
+                                                    Click="FileAction_Click"
+                                                    AutomationProperties.Name="{Binding Status, Converter={StaticResource FileStatusActionTextConverter}}"/>
                                         </Grid>
                                     </DataTemplate>
                                 </ListView.ItemTemplate>
@@ -499,12 +469,12 @@
                                 <StackPanel VerticalAlignment="Center" Margin="24">
                                     <TextBlock Text="{Binding ScanStatusPrimary}" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Center"/>
                                     <TextBlock Text="{Binding ScanStatusSecondary}" Margin="0,8,0,0" FontSize="12.5" HorizontalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}"/>
-                                    <Border Height="12" Margin="40,24,40,0" Background="{DynamicResource SkeletonPrimaryBrush}" CornerRadius="6"/>
-                                    <Border Height="12" Margin="40,12,72,0" Background="{DynamicResource SkeletonSecondaryBrush}" CornerRadius="6"/>
-                                    <Border Height="12" Margin="40,12,56,0" Background="{DynamicResource SkeletonPrimaryBrush}" CornerRadius="6"/>
-                                    <Border Height="12" Margin="40,12,80,0" Background="{DynamicResource SkeletonSecondaryBrush}" CornerRadius="6"/>
-                                    <Border Height="12" Margin="40,12,48,0" Background="{DynamicResource SkeletonPrimaryBrush}" CornerRadius="6"/>
-                                    <Button Content="取消扫描" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Center" Margin="0,20,0,0" Click="CancelProcessing_Click"/>
+                                    <Border x:Name="ShimmerBar1" Height="12" Margin="40,24,40,0" Background="{DynamicResource SkeletonPrimaryBrush}" CornerRadius="6"/>
+                                    <Border x:Name="ShimmerBar2" Height="12" Margin="40,12,72,0" Background="{DynamicResource SkeletonSecondaryBrush}" CornerRadius="6"/>
+                                    <Border x:Name="ShimmerBar3" Height="12" Margin="40,12,56,0" Background="{DynamicResource SkeletonPrimaryBrush}" CornerRadius="6"/>
+                                    <Border x:Name="ShimmerBar4" Height="12" Margin="40,12,80,0" Background="{DynamicResource SkeletonSecondaryBrush}" CornerRadius="6"/>
+                                    <Border x:Name="ShimmerBar5" Height="12" Margin="40,12,48,0" Background="{DynamicResource SkeletonPrimaryBrush}" CornerRadius="6"/>
+                                    <Button Content="取消扫描" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Center" Margin="0,20,0,0" Click="CancelProcessing_Click" AutomationProperties.Name="取消扫描"/>
                                 </StackPanel>
                             </Grid>
 
@@ -520,15 +490,18 @@
                         </Grid>
                     </Border>
 
+                    <!-- Right column: drop zone (default) / preview panel (F2) -->
+                    <Grid Grid.Column="2">
                     <!-- Drop zone (wider, ~38%) -->
-                    <Border Grid.Column="2"
+                    <Border x:Name="DropZoneBorder"
                             Background="{DynamicResource DropZoneBackgroundBrush}"
                             BorderBrush="{DynamicResource DropZoneBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="12"
                             Padding="20"
                             MouseLeftButtonDown="DropZone_Click"
-                            AutomationProperties.Name="拖拽上传区域">
+                            AutomationProperties.Name="拖拽上传区域"
+                            Visibility="{Binding IsPreviewVisible, Converter={StaticResource InverseBoolConverter}}">
                         <Border.Style>
                             <Style TargetType="Border">
                                 <Setter Property="Background" Value="{DynamicResource DropZoneBackgroundBrush}"/>
@@ -555,6 +528,50 @@
                             </StackPanel>
                         </Grid>
                     </Border>
+
+                    <!-- Preview panel (F2): 选中文件渲染结果 -->
+                    <Border Background="{DynamicResource BgFileListBrush}"
+                            CornerRadius="10"
+                            Visibility="{Binding IsPreviewVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="44"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Margin="16,0,8,0">
+                                <TextBlock Text="{Binding PreviewPanelTitle}" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                <Button Content="✕"
+                                        Style="{StaticResource GhostButtonStyle}"
+                                        Width="28"
+                                        Height="28"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Click="ClosePreview_Click"
+                                        AutomationProperties.Name="{Binding PreviewCloseText}"/>
+                            </Grid>
+
+                            <Border Grid.Row="1" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
+                                <Grid>
+                                    <TextBlock Text="{Binding PreviewEmptyText}"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMutedBrush}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               TextWrapping="Wrap"
+                                               Margin="24"
+                                               TextAlignment="Center"
+                                               Visibility="{Binding HasPreviewDocument, Converter={StaticResource InverseBoolConverter}}"/>
+                                    <FlowDocumentScrollViewer Document="{Binding PreviewDocument}"
+                                                              VerticalScrollBarVisibility="Auto"
+                                                              HorizontalScrollBarVisibility="Disabled"
+                                                              IsToolBarVisible="False"
+                                                              Background="Transparent"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    </Grid>
                 </Grid>
 
                 <!-- Progress + action buttons -->
@@ -570,20 +587,33 @@
                             <TextBlock Text="{Binding ProcessProgressText}" Margin="12,0,0,0" FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Text="{Binding ProcessProgressPercentText}" Margin="12,0,0,0" FontSize="12.5" Foreground="{DynamicResource TextMutedBrush}"/>
                         </StackPanel>
-                        <Grid Margin="0,8,80,0" MinWidth="120" MaxWidth="300" HorizontalAlignment="Left" x:Name="ProgressTrack">
+                        <!-- U4: 进度条自适应宽度（Stretch 填满左列剩余空间，ScaleX 动画不受影响） -->
+                        <Grid Margin="0,8,24,0" MinWidth="160" HorizontalAlignment="Stretch" x:Name="ProgressTrack">
                             <Border Height="6" Background="{DynamicResource ProgressTrackBrush}" CornerRadius="999"/>
+                            <!-- Progress fill: use Clip to keep rounded ends within track -->
                             <Border Height="6"
-                                    HorizontalAlignment="Left"
                                     Background="{DynamicResource PrimaryBrush}"
                                     CornerRadius="999"
-                                    Width="{Binding ProcessProgressPercent, Converter={StaticResource PercentToWidthConverter}, ConverterParameter=220}"/>
+                                    ClipToBounds="True"
+                                    HorizontalAlignment="Stretch">
+                                <Border x:Name="ProgressBarFill"
+                                        Height="6"
+                                        Background="{DynamicResource PrimaryBrush}"
+                                        HorizontalAlignment="Stretch"
+                                        RenderTransformOrigin="0,0">
+                                    <Border.RenderTransform>
+                                        <ScaleTransform x:Name="ProgressBarScale" ScaleX="0"/>
+                                    </Border.RenderTransform>
+                                </Border>
+                            </Border>
                         </Grid>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="输出设置" Style="{StaticResource SecondaryButtonStyle}" Click="PreviewSettings_Click"/>
-                        <Button Content="取消" Style="{StaticResource GhostButtonStyle}" Margin="8,0,0,0" Click="CancelProcessing_Click" Visibility="{Binding IsProcessing, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                        <Button Content="{Binding PrimaryActionText}" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0,0,0" Click="PrimaryAction_Click" IsEnabled="{Binding CanPrimaryAction}"/>
+                        <Button Content="{Binding PreviewButtonText}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Click="PreviewToggle_Click" IsEnabled="{Binding CanPreview}" Visibility="{Binding IsPreviewButtonVisible, Converter={StaticResource BoolToVisibilityConverter}}" AutomationProperties.Name="{Binding PreviewButtonText}"/>
+                        <Button Content="输出设置" Style="{StaticResource SecondaryButtonStyle}" Click="PreviewSettings_Click" AutomationProperties.Name="输出设置"/>
+                        <Button Content="取消" Style="{StaticResource GhostButtonStyle}" Margin="8,0,0,0" Click="CancelProcessing_Click" Visibility="{Binding IsProcessing, Converter={StaticResource BoolToVisibilityConverter}}" AutomationProperties.Name="取消处理"/>
+                        <Button Content="{Binding PrimaryActionText}" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0,0,0" Click="PrimaryAction_Click" IsEnabled="{Binding CanPrimaryAction}" AutomationProperties.Name="{Binding PrimaryActionText}"/>
                     </StackPanel>
                 </Grid>
             </Grid>
@@ -624,11 +654,105 @@
                     Background="{Binding ToastTone, Converter={StaticResource ToastBackgroundConverter}}"
                     BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="1"
-                    CornerRadius="8">
-                <TextBlock Text="{Binding ToastMessage}"
-                           Foreground="{Binding ToastTone, Converter={StaticResource ToneBrushConverter}}"
-                           FontSize="12"
-                           FontWeight="SemiBold"/>
+                    CornerRadius="8"
+                    RenderTransformOrigin="0.5,0"
+                    x:Name="ToastBorder">
+                <Border.RenderTransform>
+                    <TranslateTransform x:Name="ToastTranslateTransform" Y="0"/>
+                </Border.RenderTransform>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding ToastMessage}"
+                               Foreground="{Binding ToastTone, Converter={StaticResource ToneBrushConverter}}"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                    <Button Content="撤销"
+                            Style="{StaticResource ToastActionButtonStyle}"
+                            Margin="12,0,0,0"
+                            Click="UndoClear_Click"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding CanUndoClear, Converter={StaticResource BoolToVisibilityConverter}}"
+                            AutomationProperties.Name="撤销清空文件列表"/>
+                    <Button Content="打开文件夹"
+                            Style="{StaticResource ToastActionButtonStyle}"
+                            Margin="12,0,0,0"
+                            Click="OpenOutput_Click"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding CanOpenOutputDirectory, Converter={StaticResource BoolToVisibilityConverter}}"
+                            AutomationProperties.Name="打开输出文件夹"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ====== FIRST-RUN ONBOARDING OVERLAY (P1) ====== -->
+            <Border Panel.ZIndex="30"
+                    Background="#CC000000"
+                    Visibility="{Binding ShowOnboarding, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Border HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource BgCardBrush}"
+                        CornerRadius="16"
+                        BorderBrush="{DynamicResource BorderStrongBrush}"
+                        BorderThickness="1"
+                        Padding="40,32"
+                        MinWidth="520"
+                        MaxWidth="620"
+                        Effect="{StaticResource AppContainerShadow}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding OnboardingTitle}"
+                                   FontSize="20"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding OnboardingSubtitle}"
+                                   Margin="0,8,0,0"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center"/>
+
+                        <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,20,0,0"/>
+
+                        <StackPanel Margin="0,20,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="24" Height="24" Background="{DynamicResource BgActiveBrush}" CornerRadius="6" VerticalAlignment="Center">
+                                    <TextBlock Text="1" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="{Binding OnboardingStep1Title}" Margin="10,0,0,0" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding OnboardingStep1Desc}" Margin="34,6,0,0" FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                <Border Width="24" Height="24" Background="{DynamicResource BgActiveBrush}" CornerRadius="6" VerticalAlignment="Center">
+                                    <TextBlock Text="2" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="{Binding OnboardingStep2Title}" Margin="10,0,0,0" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding OnboardingStep2Desc}" Margin="34,6,0,0" FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                <Border Width="24" Height="24" Background="{DynamicResource BgActiveBrush}" CornerRadius="6" VerticalAlignment="Center">
+                                    <TextBlock Text="3" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="{Binding OnboardingStep3Title}" Margin="10,0,0,0" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding OnboardingStep3Desc}" Margin="34,6,0,0" FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <Button Content="{Binding OnboardingStartText}"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Margin="0,28,0,0"
+                                HorizontalAlignment="Center"
+                                MinWidth="160"
+                                Click="CompleteOnboarding_Click"
+                                AutomationProperties.Name="开始使用"/>
+                        <Button Content="{Binding OnboardingSkipText}"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Margin="0,10,0,0"
+                                HorizontalAlignment="Center"
+                                Padding="14,6"
+                                FontSize="12.5"
+                                Click="CompleteOnboarding_Click"
+                                AutomationProperties.Name="跳过引导"/>
+                    </StackPanel>
+                </Border>
             </Border>
         </Grid>
     </Border>

@@ -38,6 +38,11 @@ public class GeneralSettings
     public bool KeepOriginalFileName { get; set; } = true;
     public bool OverwriteExistingFile { get; set; } = false;
     public bool AutoOpenOutputDir { get; set; } = false;
+    /// <summary>界面语言：zh-CN（默认）或 en-US。</summary>
+    public string Language { get; set; } = "zh-CN";
+
+    /// <summary>是否已完成首次启动引导。默认 false，完成引导后持久化为 true。</summary>
+    public bool HasCompletedOnboarding { get; set; } = false;
 }
 
 public class AppearanceSettings
@@ -55,6 +60,9 @@ public class ConversionSettings
     public bool ContinueOnError { get; set; } = true;
     public bool PreserveFolderStructure { get; set; } = true;
     public OutputPackageMode OutputPackageMode { get; set; } = OutputPackageMode.SingleMd;
+
+    /// <summary>R3: 单次文件夹扫描的文件数量上限，达到后停止扫描（默认 5000）。</summary>
+    public int MaxScanFileCount { get; set; } = 5000;
 }
 
 public class TemplateSettings
@@ -152,4 +160,37 @@ public class RecentState
 {
     public List<string> RecentFolders { get; set; } = new();
     public List<string> RecentOutputDirectories { get; set; } = new();
+
+    /// <summary>F4: 最近转换记录（最近 20 条）。</summary>
+    public List<ConversionRecord> RecentConversions { get; set; } = new();
+}
+
+/// <summary>
+/// F4: 单次转换的历史记录条目，持久化于 RecentState。
+/// </summary>
+public class ConversionRecord
+{
+    /// <summary>转换完成时间</summary>
+    public DateTime Timestamp { get; set; }
+
+    /// <summary>源文件完整路径</summary>
+    public string SourceFilePath { get; set; } = string.Empty;
+
+    /// <summary>源文件名</summary>
+    public string SourceFileName { get; set; } = string.Empty;
+
+    /// <summary>输出文件完整路径（失败时为空）</summary>
+    public string OutputPath { get; set; } = string.Empty;
+
+    /// <summary>是否转换成功</summary>
+    public bool Success { get; set; }
+
+    /// <summary>失败时的错误信息</summary>
+    public string ErrorMessage { get; set; } = string.Empty;
+
+    /// <summary>质量评分 0.0-1.0（不可用时为 0）</summary>
+    public double QualityScore { get; set; }
+
+    /// <summary>所属模式：ToMarkdown / MarkdownToDocx / FormatDoc</summary>
+    public string Mode { get; set; } = string.Empty;
 }

@@ -1,42 +1,8 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Doc2MD.Constants;
 
 namespace Doc2MD.Models;
-
-/// <summary>
-/// 统一排版选项模型：涵盖所有可配置的排版属性。
-/// DocxFormatter 从此模型读取排版参数。
-/// </summary>
-public class DocxFormattingOptions
-{
-    // === 字体 ===
-    public string TitleFont { get; set; } = Gb9704Constants.TitleFont;
-    public string HeadingFont { get; set; } = Gb9704Constants.HeadingFont;
-    public string SubheadingFont { get; set; } = Gb9704Constants.SubheadingFont;
-    public string BodyFont { get; set; } = Gb9704Constants.BodyFont;
-    public string CodeBlockFont { get; set; } = "Consolas";
-
-    // === 字号（磅） ===
-    public double TitleFontSizePt { get; set; } = Gb9704Constants.TitleFontSize / 2.0;
-    public double HeadingFontSizePt { get; set; } = Gb9704Constants.HeadingFontSize / 2.0;
-    public double SubheadingFontSizePt { get; set; } = Gb9704Constants.SubheadingFontSize / 2.0;
-    public double BodyFontSizePt { get; set; } = Gb9704Constants.BodyFontSize / 2.0;
-    public double CodeBlockFontSizePt { get; set; } = 10.5;
-
-    // === 间距 ===
-    public double LineSpacingPt { get; set; } = 28.0;
-    public double FirstLineIndentChars { get; set; } = 2.0;
-    public double BeforeSpacingPt { get; set; } = 0;
-    public double AfterSpacingPt { get; set; } = 0;
-
-    // === 页边距（cm） ===
-    public double PageMarginTopCm { get; set; } = 3.7;
-    public double PageMarginBottomCm { get; set; } = 3.5;
-    public double PageMarginLeftCm { get; set; } = 2.8;
-    public double PageMarginRightCm { get; set; } = 2.6;
-}
 
 /// <summary>
 /// 排版方案：一个命名 + 描述 + 完整排版选项。
@@ -78,21 +44,8 @@ public class FormattingProfile
             Name = EnterpriseEnhanced,
             Description = "字号大一号、行距31磅、页边距加宽、字间距0.4pt",
             IsBuiltIn = true,
-            Options = new DocxFormattingOptions
-            {
-                TitleFontSizePt = 22,
-                HeadingFontSizePt = 18,
-                SubheadingFontSizePt = 16,
-                BodyFontSizePt = 16,
-                LineSpacingPt = 31,
-                FirstLineIndentChars = 2,
-                BeforeSpacingPt = 0,
-                AfterSpacingPt = 0,
-                PageMarginTopCm = 3.2,
-                PageMarginBottomCm = 3.2,
-                PageMarginLeftCm = 2.5,
-                PageMarginRightCm = 2.5
-            }
+            // 复用工厂方法，与 Pipeline 巡察模板参数完全一致（见 DocxTemplate）
+            Options = DocxFormattingOptions.EnterpriseEnhanced()
         },
         new()
         {

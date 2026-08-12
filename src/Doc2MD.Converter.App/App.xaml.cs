@@ -1,14 +1,24 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using Doc2MD.DependencyInjection;
 using Doc2MD.Models;
 using Doc2MD.Services;
+using Doc2MD.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 
 namespace Doc2MD;
 
 public partial class App : Application
 {
+    /// <summary>DI 容器实例，供解析服务使用。</summary>
+    internal IServiceProvider? Services { get; private set; }
+
+    /// <summary>供系统主题变更回调和设置持久化时使用的当前外观配置。</summary>
+    internal AppearanceSettings? CurrentAppearance { get; private set; }
+
     public App()
     {
         InitializeComponent();
@@ -20,10 +30,18 @@ public partial class App : Application
         {
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
             DispatcherUnhandledException += OnDispatcherUnhandledException;
-            var config = new ConfigService().Config;
+            TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+
+            // 构建 DI 容器并同步日志门面
+            Services = new ServiceCollection().BuildApplicationServices();
+            var config = Services.GetRequiredService<ConfigService>().Config;
             LoggingService.Info("应用程序启动");
             ApplyAppearanceSettings(config.Appearance);
-            base.OnStartup(e);
+
+            // 从容器解析主窗口与 ViewModel，取代 XAML StartupUri 的隐式实例化
+            var mainWindow = new MainWindow(Services.GetRequiredService<MainViewModel>());
+            MainWindow = mainWindow;
+            mainWindow.Show();
         }
         catch (Exception ex)
         {
@@ -38,21 +56,38 @@ public partial class App : Application
         if (e.ExceptionObject is Exception ex)
         {
             LoggingService.Error("未处理的域异常", ex);
-            MessageBox.Show($"未处理异常: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            // 域级异常意味着进程即将终止，无法阻止崩溃，但必须先落盘日志再提示
+            try
+            {
+                MessageBox.Show($"发生未处理的严重异常，应用即将关闭：{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}日志已保存至：{AppPaths.LogDirectory}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch
+            {
+                // 提示失败不影响日志
+            }
         }
     }
 
     private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {
         LoggingService.Error("UI线程未处理异常", e.Exception);
-        MessageBox.Show($"UI异常: {e.Exception.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        MessageBox.Show($"发生异常：{e.Exception.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
         e.Handled = true;
+    }
+
+    private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    {
+        // 后台 Task 未观察异常：记录日志并标记已观察，防止进程因未处理异常终止。
+        LoggingService.Error("后台任务未处理异常", e.Exception);
+        e.SetObserved();
     }
 
     public void ApplyAppearanceSettings(AppearanceSettings appearance)
     {
+        CurrentAppearance = appearance;
         var theme = ResolveThemeMode(appearance.Theme);
         ApplyTheme(theme);
+        UpdateThemeSubscription(appearance.Theme);
     }
 
     private void ApplyTheme(ThemeMode theme)
@@ -180,6 +215,8 @@ public partial class App : Application
         SetBrushColor("ToneInfoBrush", "#2563EB");
     }
 
+    private bool _themeSubscribed;
+
     private ThemeMode ResolveThemeMode(ThemeMode requestedTheme)
     {
         if (requestedTheme != ThemeMode.System)
@@ -197,6 +234,40 @@ public partial class App : Application
         {
             return ThemeMode.Light;
         }
+    }
+
+    /// <summary>
+    /// 在 ThemeMode.System 时订阅系统主题变更，实现运行时自动跟随。
+    /// 切换为非 System 模式时取消订阅。
+    /// </summary>
+    public void UpdateThemeSubscription(ThemeMode configuredTheme)
+    {
+        var shouldSubscribe = configuredTheme == ThemeMode.System;
+
+        if (shouldSubscribe && !_themeSubscribed)
+        {
+            Microsoft.Win32.SystemEvents.UserPreferenceChanged += OnSystemPreferenceChanged;
+            _themeSubscribed = true;
+        }
+        else if (!shouldSubscribe && _themeSubscribed)
+        {
+            Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnSystemPreferenceChanged;
+            _themeSubscribed = false;
+        }
+    }
+
+    private void OnSystemPreferenceChanged(object sender, Microsoft.Win32.UserPreferenceChangedEventArgs e)
+    {
+        if (e.Category != Microsoft.Win32.UserPreferenceCategory.General)
+        {
+            return;
+        }
+
+        // 回到 UI 线程应用主题（实例方法中可直接访问实例属性）
+        Dispatcher.BeginInvoke(() =>
+        {
+            ApplyAppearanceSettings(CurrentAppearance ?? new AppearanceSettings { Theme = ThemeMode.System });
+        });
     }
 
     private void SetBrushColor(string resourceKey, string colorValue)

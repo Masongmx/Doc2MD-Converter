@@ -1,5 +1,6 @@
 using System.IO;
 using Doc2MD.Models;
+using Doc2MD.Pipeline.Models;
 using Doc2MD.Pipeline.Services;
 using Doc2MD.Services;
 using DocumentFormat.OpenXml;
@@ -370,6 +371,36 @@ public class TemplateAndFeatureTests
         {
             Directory.Delete(tempDir, true);
         }
+    }
+
+    // === C9: Phase 2 占位方法降级（不再抛 NotImplementedException） ===
+
+    [Fact]
+    public void TemplateRepository_Phase2Placeholders_DoNotThrow()
+    {
+        var repo = new TemplateRepository();
+
+        // 占位方法不应抛出异常，调用方不会被中断
+        repo.SaveTemplate(new DocxTemplate());
+        repo.DeleteTemplate("some-template-id");
+
+        var cloned = repo.CloneTemplate(new DocxTemplate());
+        Assert.Null(cloned);
+    }
+
+    [Fact]
+    public void TemplateRepository_GetTemplate_ResolvesBuiltIn()
+    {
+        var repo = new TemplateRepository();
+        var builtIn = repo.LoadBuiltInTemplates();
+        Assert.NotEmpty(builtIn);
+
+        var byId = repo.GetTemplate(builtIn[0].Id);
+        Assert.NotNull(byId);
+        Assert.Equal(builtIn[0].Id, byId!.Id);
+
+        Assert.Null(repo.GetTemplate(""));
+        Assert.Null(repo.GetTemplate("no-such-template"));
     }
 
     // === 辅助方法 ===

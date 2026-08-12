@@ -1,4 +1,5 @@
 using Doc2MD.Pipeline.Models;
+using Doc2MD.Services;
 
 namespace Doc2MD.Pipeline.Services;
 
@@ -36,16 +37,25 @@ public class TemplateRepository
     }
 
     // ==== Phase 2 占位方法 ====
+    // 当前版本不支持用户模板编辑：不做抛异常处理（避免调用方崩溃），
+    // 改为记录 Warning 日志并返回空结果，待 Phase 2 实现。
 
-    /// <summary>保存用户模板（Phase 2）</summary>
-    public void SaveTemplate(DocxTemplate template) =>
-        throw new NotImplementedException("Phase 2: 用户模板编辑");
+    /// <summary>保存用户模板（Phase 2 占位：记录日志并忽略）</summary>
+    public void SaveTemplate(DocxTemplate template)
+    {
+        LoggingService.Warning($"模板保存功能暂未开放（Phase 2），已忽略: {template?.Id ?? "<null>"}");
+    }
 
-    /// <summary>删除用户模板（Phase 2）</summary>
-    public void DeleteTemplate(string id) =>
-        throw new NotImplementedException("Phase 2: 用户模板删除");
+    /// <summary>删除用户模板（Phase 2 占位：记录日志并忽略）</summary>
+    public void DeleteTemplate(string id)
+    {
+        LoggingService.Warning($"模板删除功能暂未开放（Phase 2），已忽略: {id ?? "<null>"}");
+    }
 
-    /// <summary>克隆模板（Phase 2）</summary>
-    public DocxTemplate CloneTemplate(DocxTemplate template) =>
-        throw new NotImplementedException("Phase 2: 模板克隆");
+    /// <summary>克隆模板（Phase 2 占位：记录日志并返回 null）</summary>
+    public DocxTemplate? CloneTemplate(DocxTemplate template)
+    {
+        LoggingService.Warning($"模板克隆功能暂未开放（Phase 2），返回 null: {template?.Id ?? "<null>"}");
+        return null;
+    }
 }

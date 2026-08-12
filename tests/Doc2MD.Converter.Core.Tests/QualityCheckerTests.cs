@@ -18,13 +18,16 @@ public class QualityCheckerTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "test.docx",
-            SourceType = "Word"
+            Metadata = new ConversionMetadata
+            {
+                SourceFilePath = "test.docx",
+                SourceType = "Word"
+            }
         };
 
         QualityChecker.GenerateReport(result);
 
-        Assert.Equal("recommended", result.ImportRecommendation);
+        Assert.Equal("recommended", result.Quality.ImportRecommendation);
     }
 
     [Fact]
@@ -33,14 +36,17 @@ public class QualityCheckerTests
         var result = new ConversionResult
         {
             Success = false,
-            SourceFilePath = "test.docx",
-            SourceType = "Word",
-            ErrorMessage = "fail"
+            ErrorMessage = "fail",
+            Metadata = new ConversionMetadata
+            {
+                SourceFilePath = "test.docx",
+                SourceType = "Word"
+            }
         };
 
         QualityChecker.GenerateReport(result);
 
-        Assert.Equal("not_recommended", result.ImportRecommendation);
+        Assert.Equal("not_recommended", result.Quality.ImportRecommendation);
     }
 
     [Fact]
@@ -49,14 +55,17 @@ public class QualityCheckerTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "test.pdf",
-            SourceType = "PDF"
+            Metadata = new ConversionMetadata
+            {
+                SourceFilePath = "test.pdf",
+                SourceType = "PDF"
+            }
         };
-        result.Warnings.Add(ConversionWarning.Create("W_IMG_LOST", "img lost", "p1"));
+        result.Quality.Warnings.Add(ConversionWarning.Create("W_IMG_LOST", "img lost", "p1"));
 
         QualityChecker.GenerateReport(result);
 
-        Assert.Equal("review", result.ImportRecommendation);
+        Assert.Equal("review", result.Quality.ImportRecommendation);
     }
 
     [Fact]
@@ -65,19 +74,22 @@ public class QualityCheckerTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "test.pdf",
-            SourceType = "PDF"
+            Metadata = new ConversionMetadata
+            {
+                SourceFilePath = "test.pdf",
+                SourceType = "PDF"
+            }
         };
 
         for (int i = 0; i < 30; i++)
         {
-            result.Warnings.Add(ConversionWarning.Create("W_REVISION_LOST", $"w{i}", "full"));
+            result.Quality.Warnings.Add(ConversionWarning.Create("W_REVISION_LOST", $"w{i}", "full"));
         }
 
         QualityChecker.GenerateReport(result);
 
-        Assert.True(result.QualityScore < 0.7);
-        Assert.Equal("review", result.ImportRecommendation);
+        Assert.True(result.Quality.QualityScore < 0.7);
+        Assert.Equal("review", result.Quality.ImportRecommendation);
     }
 
     // === 公文加分 ===
@@ -88,19 +100,22 @@ public class QualityCheckerTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "test.docx",
-            SourceType = "Word",
-            GovMetadata = new GovMetadata
+            Metadata = new ConversionMetadata
             {
-                Title = "t",
-                DocumentNumber = "x2024x8",
-                IssuingAuthority = "office"
+                SourceFilePath = "test.docx",
+                SourceType = "Word",
+                GovMetadata = new GovMetadata
+                {
+                    Title = "t",
+                    DocumentNumber = "x2024x8",
+                    IssuingAuthority = "office"
+                }
             }
         };
 
         QualityChecker.GenerateReport(result);
 
-        Assert.True(result.QualityScore >= 0.95);
+        Assert.True(result.Quality.QualityScore >= 0.95);
     }
 
     [Fact]
@@ -109,18 +124,21 @@ public class QualityCheckerTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "test.docx",
-            SourceType = "Word",
-            GovMetadata = new GovMetadata
+            Metadata = new ConversionMetadata
             {
-                Title = "t",
-                IssuingAuthority = "office"
+                SourceFilePath = "test.docx",
+                SourceType = "Word",
+                GovMetadata = new GovMetadata
+                {
+                    Title = "t",
+                    IssuingAuthority = "office"
+                }
             }
         };
 
         QualityChecker.GenerateReport(result);
 
-        Assert.Equal(1.0, result.QualityScore);
+        Assert.Equal(1.0, result.Quality.QualityScore);
     }
 
     [Fact]
@@ -129,17 +147,20 @@ public class QualityCheckerTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "test.docx",
-            SourceType = "Word",
-            GovMetadata = new GovMetadata
+            Metadata = new ConversionMetadata
             {
-                Title = "plain"
+                SourceFilePath = "test.docx",
+                SourceType = "Word",
+                GovMetadata = new GovMetadata
+                {
+                    Title = "plain"
+                }
             }
         };
 
         QualityChecker.GenerateReport(result);
 
-        Assert.Equal(1.0, result.QualityScore);
+        Assert.Equal(1.0, result.Quality.QualityScore);
     }
 
     // === 质量报告内容 ===
@@ -150,11 +171,14 @@ public class QualityCheckerTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "test.xlsx",
-            SourceType = "Excel"
+            Metadata = new ConversionMetadata
+            {
+                SourceFilePath = "test.xlsx",
+                SourceType = "Excel"
+            }
         };
-        result.Warnings.Add(ConversionWarning.Create("W_MERGED_CELLS", "merged", "Sheet1"));
-        result.Warnings.Add(ConversionWarning.Create("W_FORMULA_LOST", "formula", "Sheet1"));
+        result.Quality.Warnings.Add(ConversionWarning.Create("W_MERGED_CELLS", "merged", "Sheet1"));
+        result.Quality.Warnings.Add(ConversionWarning.Create("W_FORMULA_LOST", "formula", "Sheet1"));
 
         var json = QualityChecker.GenerateReport(result);
         var report = JsonSerializer.Deserialize<JsonElement>(json);
@@ -170,14 +194,17 @@ public class QualityCheckerTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "test.docx",
-            SourceType = "Word",
-            GovMetadata = new GovMetadata
+            Metadata = new ConversionMetadata
             {
-                Title = "t",
-                DocumentNumber = "x8",
-                IssuingAuthority = "office",
-                Confidence = 0.75
+                SourceFilePath = "test.docx",
+                SourceType = "Word",
+                GovMetadata = new GovMetadata
+                {
+                    Title = "t",
+                    DocumentNumber = "x8",
+                    IssuingAuthority = "office",
+                    Confidence = 0.75
+                }
             }
         };
 
@@ -194,8 +221,11 @@ public class QualityCheckerTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "test.docx",
-            SourceType = "Word"
+            Metadata = new ConversionMetadata
+            {
+                SourceFilePath = "test.docx",
+                SourceType = "Word"
+            }
         };
 
         var json = QualityChecker.GenerateReport(result);
@@ -251,8 +281,11 @@ public class QualityCheckerTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "test.docx",
-            SourceType = "Word"
+            Metadata = new ConversionMetadata
+            {
+                SourceFilePath = "test.docx",
+                SourceType = "Word"
+            }
         };
 
         var json = QualityChecker.GenerateReport(result);
@@ -267,10 +300,13 @@ public class QualityCheckerTests
         var result = new ConversionResult
         {
             Success = true,
-            SourceFilePath = "test.pdf",
-            SourceType = "PDF"
+            Metadata = new ConversionMetadata
+            {
+                SourceFilePath = "test.pdf",
+                SourceType = "PDF"
+            }
         };
-        result.Warnings.Add(ConversionWarning.Create("W_IMG_LOST", "img lost", "p1"));
+        result.Quality.Warnings.Add(ConversionWarning.Create("W_IMG_LOST", "img lost", "p1"));
 
         var json = QualityChecker.GenerateReport(result);
         var report = JsonSerializer.Deserialize<JsonElement>(json);

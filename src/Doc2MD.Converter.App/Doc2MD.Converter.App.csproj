@@ -7,7 +7,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <AssemblyName>Doc2MD.Converter</AssemblyName>
-    <Version>2.0.0</Version>
+    <RootNamespace>Doc2MD</RootNamespace>
+    <Version>2.1.0</Version>
     <Company>Doc2MD Converter</Company>
     <Product>Doc2MD Converter</Product>
     <Description>Offline document conversion and Chinese official document formatting tool</Description>
@@ -21,6 +22,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
   </ItemGroup>
 
   <ItemGroup>

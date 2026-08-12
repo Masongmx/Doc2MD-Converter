@@ -16,6 +16,9 @@ internal sealed class FileScanService
         _config = config;
     }
 
+    /// <summary>进度上报节流间隔（毫秒），避免大文件夹扫描时高频 UI 回调。</summary>
+    private const long ProgressThrottleMs = 100;
+
     public FolderScanResult ScanFolder(
         string folderPath,
         AppMode mode,
@@ -25,6 +28,9 @@ internal sealed class FileScanService
         var result = new FolderScanResult();
         var stack = new Stack<string>();
         stack.Push(folderPath);
+
+        var maxFiles = Math.Max(1, _config.Conversion.MaxScanFileCount);
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
         while (stack.Count > 0)
         {
@@ -45,6 +51,14 @@ internal sealed class FileScanService
             foreach (var entry in entries)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
+                // R3: 达到扫描数量上限时停止（丢弃剩余目录），避免超大文件夹卡顿
+                if (result.Found >= maxFiles)
+                {
+                    result.Truncated = true;
+                    stack.Clear();
+                    break;
+                }
 
                 if (ShouldIgnorePath(entry))
                 {
@@ -73,9 +87,17 @@ internal sealed class FileScanService
                     result.Unsupported++;
                 }
 
-                progress?.Report(new ScanProgressInfo(result.Found, result.Supported));
+                // R3: 节流——每 100ms 最多上报一次，减少 UI 线程压力
+                if (stopwatch.ElapsedMilliseconds >= ProgressThrottleMs)
+                {
+                    progress?.Report(new ScanProgressInfo(result.Found, result.Supported));
+                    stopwatch.Restart();
+                }
             }
         }
+
+        // 循环结束后强制上报一次，保证最终计数准确
+        progress?.Report(new ScanProgressInfo(result.Found, result.Supported));
 
         return result;
     }
@@ -131,5 +153,8 @@ internal sealed class FileScanService
         public int Found { get; set; }
         public int Supported { get; set; }
         public int Unsupported { get; set; }
+
+        /// <summary>R3: 是否因达到扫描数量上限而截断。</summary>
+        public bool Truncated { get; set; }
     }
 }
