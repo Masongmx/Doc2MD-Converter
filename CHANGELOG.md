@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `MainWindow.xaml` 移除 XAML 内嵌 `<vm:MainViewModel/>` 实例化与 `App.xaml` 的 `StartupUri`，改为 `App.OnStartup` 从 DI 容器解析并设置 `DataContext`
-- **统一 `DocxFormattingOptions`**（C2）：删除 Pipeline 命名空间下与 `Doc2MD.Models` 中同名的重复类，统一为单一模型（保留多级标题/页码/文档网格/字间距等 Pipeline 属性，合并 FormatDoc 侧 Markdown 标题/代码块字体属性），`DocxTemplate`/`DocxRenderer`/`StyleApplier` 改用 `Doc2MD.Models` 引用；内置"企业增强版"方案改为复用 `EnterpriseEnhanced()` 工厂方法，与 Pipeline 巡察模板参数完全一致；补充 9 个单元测试覆盖工厂方法、缩进计算、JSON 往返与设置双向映射
+- **统一 `DocxFormattingOptions`**（C2）：删除 Pipeline 命名空间下与 `Doc2MD.Models` 中同名的重复类，统一为单一模型（保留多级标题/页码/文档网格/字间距等 Pipeline 属性，合并 FormatDoc 侧 Markdown 标题/代码块字体属性），`DocxTemplate`/`DocxRenderer`/`StyleApplier` 改用 `Doc2MD.Models` 引用；内置"企业增强版"方案改为复用 `EnterpriseEnhanced()` 工厂方法，与 Pipeline 企业增强版模板参数完全一致；补充 9 个单元测试覆盖工厂方法、缩进计算、JSON 往返与设置双向映射
 - **MainWindow 构造函数注入 ViewModel**（C7）：移除 `(MainViewModel)DataContext` 强制转换，改为构造函数注入（App 启动时从 DI 容器解析）
 - **模板占位方法降级**（C9）：`TemplateRepository` 的 `SaveTemplate`/`DeleteTemplate`/`CloneTemplate` 不再抛 `NotImplementedException`，改为记录 Warning 日志并降级返回，避免调用方崩溃
 - **Windows 保留名防护**（S2）：`SecurityPolicyService.SanitizeFileName` 对 CON/PRN/AUX/NUL/COM1-9/LPT1-9 等保留设备名添加下划线前缀（含带扩展名场景）
@@ -148,3 +148,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Drag-and-drop file import with batch processing
 - Self-contained single-file Windows executable
 
+> AI生成

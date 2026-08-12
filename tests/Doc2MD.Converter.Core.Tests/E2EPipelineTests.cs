@@ -117,46 +117,7 @@ public class E2EPipelineTests
     }
 
     // ========================================================================
-    // 3. inspection-report 模板完整 E2E
-    // ========================================================================
-    [Fact]
-    public void E2EPipeline_InspectionReport_FixtureConvert_Reopen_ReportTemplate()
-    {
-        var fixturePath = Path.Combine(FixturesDir, "sample_inspection.md");
-        Assert.True(File.Exists(fixturePath), $"Fixture not found: {fixturePath}");
-
-        var tempDir = Path.Combine(Path.GetTempPath(), $"E2E_inspection_{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tempDir);
-        try
-        {
-            var outputPath = Path.Combine(tempDir, "inspection.docx");
-            var converter = new MarkdownToDocxConverter();
-            var result = converter.Convert(fixturePath, outputPath, "inspection-report");
-
-            Assert.True(result.Success, result.ErrorMessage);
-            Assert.True(File.Exists(result.OutputPath));
-
-            // Open XML 重开
-            using (var doc = WordprocessingDocument.Open(outputPath, false))
-            {
-                Assert.NotNull(doc.MainDocumentPart?.Document?.Body);
-            }
-
-            // 格式检查报告
-            Assert.True(File.Exists(result.FormatCheckReportPath));
-            var reportJson = File.ReadAllText(result.FormatCheckReportPath!);
-            var report = JsonSerializer.Deserialize<JsonDocument>(reportJson,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            Assert.Equal("inspection-report", report!.RootElement.GetProperty("template").GetString());
-        }
-        finally
-        {
-            if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
-        }
-    }
-
-    // ========================================================================
-    // 4. 同名文件保护：已有同名 DOCX 时不覆盖，使用 _1 后缀
+    // 3. 同名文件保护：已有同名 DOCX 时不覆盖，使用 _1 后缀
     //    复现 MainViewModel.RunPipelineMd2DocxAsync 中的同名处理逻辑
     // ========================================================================
     [Fact]

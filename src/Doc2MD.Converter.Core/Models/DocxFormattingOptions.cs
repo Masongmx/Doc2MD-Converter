@@ -178,13 +178,13 @@ public class DocxFormattingOptions
     };
 
     /// <summary>
-    /// 创建巡察文档模板排版选项（与 GB/T 9704-2012 有冲突的独立规范）。
+    /// 创建企业增强版排版选项（与 GB/T 9704-2012 有差异的独立规范）。
     /// 标题小一号(24pt)方正小标宋简体，正文小二号(18pt)方正仿宋简体，
     /// 行距31磅，页边距3.2/3.2/2.5/2.5cm，21行×24字，字间距加宽0.4磅。
     /// </summary>
     public static DocxFormattingOptions EnterpriseEnhanced() => new()
     {
-        SchemeName = "巡察文档模板",
+        SchemeName = "企业增强版",
         // 公文标题
         TitleFont = "方正小标宋简体",
         TitleFontSizePt = 24.0,  // 小一号

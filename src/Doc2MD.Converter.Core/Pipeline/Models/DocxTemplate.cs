@@ -65,28 +65,6 @@ public class DocxTemplate
         },
         Options = DocxFormattingOptions.GeneralDocument()
     };
-
-    /// <summary>
-    /// 巡察文档模板（与企业增强版一致）：与 GB/T 9704-2012 存在差异的独立规范。
-    /// 标题小一号方正小标宋简体，正文小二号方正仿宋简体，
-    /// 行距31磅，页边距3.2/3.2/2.5/2.5cm，21行x24字，字间距加宽0.4磅。
-    /// </summary>
-    public static DocxTemplate InspectionReport() => new()
-    {
-        Id = "inspection-report",
-        Name = "巡察文档模板",
-        Type = DocxTemplateType.BuiltIn,
-        Metadata = new DocxTemplateMetadata
-        {
-            DisplayName = "巡察文档模板",
-            Description = "标题小一号方正小标宋简体，正文小二号方正仿宋简体，行距31磅，页边距3.2/3.2/2.5/2.5cm，21行×24字，字间距加宽0.4磅。与 GB/T 9704-2012 存在差异。",
-            Version = "1.0",
-            IsBuiltIn = true,
-            Tags = new[] { "巡察", "报告" },
-            PreviewText = "巡察报告专用排版方案，适合巡察文档的特定格式要求。"
-        },
-        Options = DocxFormattingOptions.EnterpriseEnhanced()
-    };
 }
 
 /// <summary>模板类型枚举</summary>

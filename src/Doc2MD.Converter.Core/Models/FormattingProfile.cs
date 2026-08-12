@@ -44,7 +44,7 @@ public class FormattingProfile
             Name = EnterpriseEnhanced,
             Description = "字号大一号、行距31磅、页边距加宽、字间距0.4pt",
             IsBuiltIn = true,
-            // 复用工厂方法，与 Pipeline 巡察模板参数完全一致（见 DocxTemplate）
+            // 复用工厂方法，与 Pipeline 企业增强版模板参数完全一致（见 DocxTemplate）
             Options = DocxFormattingOptions.EnterpriseEnhanced()
         },
         new()

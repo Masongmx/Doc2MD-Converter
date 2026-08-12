@@ -208,29 +208,6 @@ public class TemplateAndFeatureTests
         }
     }
 
-    // === Pipeline 巡察文档模板 ===
-
-    [Fact]
-    public void Pipeline_InspectionReport_CreatesDocx()
-    {
-        var tempDir = Path.Combine(Path.GetTempPath(), $"Doc2MD_Test_{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tempDir);
-        try
-        {
-            var mdPath = Path.Combine(tempDir, "test.md");
-            File.WriteAllText(mdPath, "# 巡察报告\n\n一、基本情况\n\n描述内容。");
-
-            var converter = new MarkdownToDocxConverter();
-            var result = converter.Convert(mdPath, Path.Combine(tempDir, "output.docx"), "inspection-report");
-
-            Assert.True(result.Success, result.ErrorMessage);
-        }
-        finally
-        {
-            Directory.Delete(tempDir, true);
-        }
-    }
-
     // === Pipeline 格式检查报告生成 ===
 
     [Fact]

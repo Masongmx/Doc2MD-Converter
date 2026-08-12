@@ -13,8 +13,7 @@ public class TemplateRepository
     private static readonly List<DocxTemplate> _builtInTemplates =
     [
         DocxTemplate.OfficialReport(),
-        DocxTemplate.MeetingMinutes(),
-        DocxTemplate.InspectionReport()
+        DocxTemplate.MeetingMinutes()
     ];
 
     /// <summary>加载所有内置模板</summary>

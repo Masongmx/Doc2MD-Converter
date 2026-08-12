@@ -18,6 +18,17 @@ Batch document input → format conversion / official-document typesetting → o
 
 ![Main window](screenshots/main-window.png)
 
+## Quick Start
+
+**End users (no build needed):**
+
+1. Download the latest Windows package from [Releases](../../releases) (self-contained single file, no .NET install required)
+2. Unzip and double-click `Doc2MD.Converter.exe`
+3. Drag documents into the window (or click "Add Files / Add Folder")
+4. Choose the output directory, click "Generate", and find the results in the output directory
+
+**Developers:** see [Build & Run](#build--run) below.
+
 ## Features
 
 ### 1. Documents to Markdown
@@ -40,7 +51,7 @@ Batch-convert the following formats to Markdown:
 ### 2. Markdown to Official DOCX
 
 - Compliant with GB/T 9704-2012 (official document format standard for Party and government organs)
-- Built-in templates: Official Report, Meeting Minutes, Inspection Report
+- Built-in templates: Official Report, Meeting Minutes
 - Custom Word template support (clones template styles and section settings)
 - Table of contents generation, header/footer support, Chinese typography (方正小标宋简体 / 黑体 / 仿宋_GB2312 / 楷体_GB2312)
 
@@ -49,17 +60,6 @@ Batch-convert the following formats to Markdown:
 - Automatically normalizes fonts, sizes, line spacing, page margins, first-line indent per GB/T 9704-2012
 - Three built-in formatting profiles: Standard Official, Enterprise Enhanced, Academic Paper
 - Profile import/export support
-
-## Quick Start
-
-**End users (no build needed):**
-
-1. Download the latest Windows package from [Releases](../../releases) (self-contained single file, no .NET install required)
-2. Unzip and double-click `Doc2MD.Converter.exe`
-3. Drag documents into the window (or click "Add Files / Add Folder")
-4. Choose the output directory, click "Generate", and find the results in the output directory
-
-**Developers:** see [Build & Run](#build--run) below.
 
 ## Example
 

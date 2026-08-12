@@ -111,7 +111,7 @@ public class MarkdownToDocxPreviewSettings
     public double PageMarginRightCm { get; set; } = 2.6;
     public string FormatScheme { get; set; } = "标准公文格式";
 
-    /// <summary>Pipeline 排版引擎模板 ID（official-report / meeting-minutes / inspection-report）</summary>
+    /// <summary>Pipeline 排版引擎模板 ID（official-report / meeting-minutes）</summary>
     public string PipelineTemplateId { get; set; } = "official-report";
 }
 

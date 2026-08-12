@@ -61,10 +61,10 @@ public class DocxFormattingOptionsTests
     }
 
     [Fact]
-    public void EnterpriseEnhanced_MatchesInspectionSpec()
+    public void EnterpriseEnhanced_MatchesSpec()
     {
         var opts = DocxFormattingOptions.EnterpriseEnhanced();
-        Assert.Equal("巡察文档模板", opts.SchemeName);
+        Assert.Equal("企业增强版", opts.SchemeName);
         Assert.Equal(24.0, opts.TitleFontSizePt);   // 小一号
         Assert.Equal(18.0, opts.BodyFontSizePt);    // 小二号
         Assert.Equal(31.0, opts.LineSpacingPt);     // 行距 31 磅
@@ -92,7 +92,7 @@ public class DocxFormattingOptionsTests
 
     [Theory]
     [InlineData(2.0, 16.0, 640)]   // 2 字符 × 16pt × 20twips
-    [InlineData(2.0, 18.0, 720)]   // 巡察模板：小二号
+    [InlineData(2.0, 18.0, 720)]   // 企业增强版：小二号
     [InlineData(0.0, 22.0, 0)]     // 标题不缩进
     [InlineData(1.0, 10.5, 210)]   // 代码块 10.5pt
     public void CalcIndentTwips_ComputesTwips(double chars, double fontSizePt, int expected)
