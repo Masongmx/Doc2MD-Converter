@@ -1,14 +1,3 @@
----
-AIGC:
-  ContentProducer: '001191110102MAD55U9H0F10002'
-  ContentPropagator: '001191110102MAD55U9H0F10002'
-  Label: '1'
-  ProduceID: '6fe97fce-73ff-44c0-b574-b04c69b89aa9'
-  PropagateID: '6fe97fce-73ff-44c0-b574-b04c69b89aa9'
-  ReservedCode1: 'b918819d-1825-48a0-a949-7cef31e3ec97'
-  ReservedCode2: 'b918819d-1825-48a0-a949-7cef31e3ec97'
----
-
 # 离线转换引擎部署（绿色便携版）
 
 本目录存放随程序分发的第三方便携工具，全部离线运行、免安装。程序按以下目录结构自动探测：
