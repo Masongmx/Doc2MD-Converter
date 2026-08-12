@@ -1,11 +1,23 @@
 
+<div align="center">
+
 # Doc2MD Converter
 
-> [English](docs/README.en.md) | 中文
+**Windows 离线文档转换与中文公文排版工具**
 
-可完全离线运行的 Windows 文档转换与中文公文排版工具。
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)
+![.NET](https://img.shields.io/badge/.NET-8-512BD4)
+![Language](https://img.shields.io/badge/language-中文%20%7C%20English-brightgreen)
+![Offline](https://img.shields.io/badge/offline-100%25%20local-orange)
 
-批量文档输入 → 格式转换 / 公文排版 → 输出到指定目录。支持中英文界面，所有处理均在本地完成，文档内容不上传。
+[English](docs/README.en.md) · [更新日志](CHANGELOG.md)
+
+</div>
+
+批量文档输入 → 格式转换 / 公文排版 → 输出到指定目录。面向政企办公场景，内置 GB/T 9704-2012 公文格式标准，支持中英文界面。所有处理均在本地完成，**文档内容绝不上传**。
+
+![主界面](docs/screenshots/main-window.png)
 
 ## 功能特性
 
@@ -39,6 +51,42 @@
 - 内置三种排版方案：标准公文格式 / 企业增强版 / 学术论文格式
 - 支持排版方案导入导出
 
+## 快速开始
+
+**最终用户（无需编译）：**
+
+1. 前往 [Releases](../../releases) 下载最新版 Windows 安装包（自包含单文件，免安装 .NET）
+2. 解压后双击 `Doc2MD.Converter.exe`
+3. 将待转换文档拖入窗口（或点击"添加文件 / 添加文件夹"）
+4. 选择输出目录，点击「生成」，在输出目录查看结果
+
+**开发者：** 见下方 [构建与运行](#构建与运行)。
+
+## 使用示例
+
+以「文档转 Markdown」为例，拖入 PDF / Word 文档后一键输出：
+
+```text
+输入：会议纪要.docx（含标题、表格、列表）
+        │
+        ▼
+输出：会议纪要.md
+
+# 会议纪要
+
+## 会议时间
+2026-08-12 09:30
+
+| 议题 | 结论 |
+|------|------|
+| 上半年经营分析 | 通过 |
+
+- 项目A：按计划推进
+- 项目B：需协调资源
+```
+
+「Markdown 转公文 DOCX」则按 GB/T 9704-2012 自动套用公文版式，一键产出可直接打印的正式公文。
+
 ## 界面与交互
 
 - 三模式卡片切换（文档转 Markdown / Markdown 转 DOCX / 一键排版）
@@ -65,6 +113,19 @@ Doc2MD.Converter.slnx
 ├── tests/                        # 单元测试与 E2E 测试（xUnit，295+ 用例）
 │   └── fixtures/                 # 脱敏测试样例
 └── scripts/                      # 构建 / 发布 / 冒烟测试脚本
+```
+
+处理流程：
+
+```mermaid
+flowchart LR
+    A[输入文档] --> B{选择模式}
+    B -->|文档转 Markdown| C[解析/OCR 提取]
+    B -->|Markdown 转公文| D[语义化渲染管线]
+    B -->|一键排版| E[GB/T 9704 规范化]
+    C --> F[输出 .md]
+    D --> G[输出公文 .docx]
+    E --> H[输出规范化 .docx]
 ```
 
 ## 环境要求
@@ -99,21 +160,27 @@ dotnet run --project src/Doc2MD.Converter.App
 
 ## 安全与隐私
 
-- 完全离线：默认不联网，文档内容不上传
+- **完全离线**：默认不联网，文档内容不上传
 - OCR、LibreOffice 等外部工具仅从本地路径调用
 - 内置安全策略：路径隔离、覆盖保护、文件类型与大小限制、Windows 保留名净化
 - 可选的自动更新检查：仅轮询 GitHub Releases 接口，不自动下载安装，由用户确认跳转下载页
 
-## 许可证
+## 相关链接
 
-MIT License，见 [LICENSE](LICENSE)。
+- [English README](docs/README.en.md)
+- [更新日志 (CHANGELOG)](CHANGELOG.md)
+- [Releases](../../releases)
 
 ## 从源码开始贡献
 
 1. Fork 本仓库并克隆到本地
 2. 安装 .NET 8 SDK
-3. 运行 `dotnet build Doc2MD.Converter.slnx` 确认构建通过
+3. 运行 `dotnet build` 确认构建通过
 4. 编写/修改代码，补充相应单元测试
 5. 运行 `dotnet test` 确保全部用例通过
 6. 提交 Pull Request（请在提交信息中注明改动类别与原因）
+
+## 许可证
+
+MIT License，见 [LICENSE](LICENSE)。
 

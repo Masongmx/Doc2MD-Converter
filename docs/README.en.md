@@ -1,11 +1,22 @@
+<div align="center">
 
 # Doc2MD Converter
 
-> English | [中文](../README.md)
+**Offline document conversion & Chinese official-document formatting for Windows**
 
-A fully offline Windows document conversion and Chinese official document (公文) formatting tool.
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)
+![.NET](https://img.shields.io/badge/.NET-8-512BD4)
+![Language](https://img.shields.io/badge/language-Chinese%20%7C%20English-brightgreen)
+![Offline](https://img.shields.io/badge/offline-100%25%20local-orange)
 
-Batch document input → format conversion / official document typesetting → output to a target directory. Supports Chinese and English UI. All processing happens locally — **your documents never leave your machine**.
+[中文](../README.md) · [Changelog](../CHANGELOG.md)
+
+</div>
+
+Batch document input → format conversion / official-document typesetting → output to a target directory. Built for government & enterprise office scenarios, with the GB/T 9704-2012 official document standard built in. Supports Chinese and English UI. All processing happens locally — **your documents never leave your machine**.
+
+![Main window](screenshots/main-window.png)
 
 ## Features
 
@@ -33,11 +44,47 @@ Batch-convert the following formats to Markdown:
 - Custom Word template support (clones template styles and section settings)
 - Table of contents generation, header/footer support, Chinese typography (方正小标宋简体 / 黑体 / 仿宋_GB2312 / 楷体_GB2312)
 
-### 3. One-Click Formatting of DOC / DOCX
+### 3. One-Click Formatting of DOCX
 
 - Automatically normalizes fonts, sizes, line spacing, page margins, first-line indent per GB/T 9704-2012
 - Three built-in formatting profiles: Standard Official, Enterprise Enhanced, Academic Paper
 - Profile import/export support
+
+## Quick Start
+
+**End users (no build needed):**
+
+1. Download the latest Windows package from [Releases](../../releases) (self-contained single file, no .NET install required)
+2. Unzip and double-click `Doc2MD.Converter.exe`
+3. Drag documents into the window (or click "Add Files / Add Folder")
+4. Choose the output directory, click "Generate", and find the results in the output directory
+
+**Developers:** see [Build & Run](#build--run) below.
+
+## Example
+
+Drag in a PDF / Word document with "Documents to Markdown" mode:
+
+```text
+Input:  meeting-notes.docx (headings, table, list)
+        │
+        ▼
+Output: meeting-notes.md
+
+# Meeting Notes
+
+## Time
+2026-08-12 09:30
+
+| Topic              | Result |
+|--------------------|--------|
+| H1 business review | Approved |
+
+- Project A: on schedule
+- Project B: needs coordination
+```
+
+"Markdown to Official DOCX" applies the GB/T 9704-2012 layout automatically — one click to a print-ready official document.
 
 ## UI & Interaction
 
@@ -65,6 +112,19 @@ Doc2MD.Converter.slnx
 ├── tests/                        # Unit & E2E tests (xUnit, 295+ cases)
 │   └── fixtures/                 # Sanitized test samples
 └── scripts/                      # Build / publish / smoke-test scripts
+```
+
+Processing flow:
+
+```mermaid
+flowchart LR
+    A[Input document] --> B{Pick a mode}
+    B -->|To Markdown| C[Parse / OCR extract]
+    B -->|To Official| D[Semantic rendering pipeline]
+    B -->|Formatting| E[GB/T 9704 normalize]
+    C --> F[Output .md]
+    D --> G[Output official .docx]
+    E --> H[Output formatted .docx]
 ```
 
 ## Requirements
@@ -99,21 +159,26 @@ Publish output goes to `publish/gui/`; copy templates to `publish/templates/` as
 
 ## Security & Privacy
 
-- Fully offline by default — no network calls, no document upload
+- **Fully offline** by default — no network calls, no document upload
 - External tools (OCR, LibreOffice) invoked only from local paths
 - Built-in security policy: path isolation, overwrite protection, file type & size limits, Windows reserved-name sanitization
 - Optional update check: only queries the GitHub Releases API; never auto-downloads, asks the user before opening the download page
 
-## License
+## Links
 
-MIT License — see [LICENSE](LICENSE).
+- [中文 README](../README.md)
+- [Changelog](../CHANGELOG.md)
+- [Releases](../../releases)
 
 ## Contributing
 
 1. Fork and clone this repository
 2. Install the .NET 8 SDK
-3. Run `dotnet build Doc2MD.Converter.slnx` to verify the build
+3. Run `dotnet build` to verify the build
 4. Write/modify code and add unit tests
 5. Run `dotnet test` to make sure all cases pass
 6. Submit a Pull Request (describe the change category and rationale in the commit message)
 
+## License
+
+MIT License — see [LICENSE](../LICENSE).
