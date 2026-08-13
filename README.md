@@ -1,4 +1,4 @@
-
+﻿
 <div align="center">
 
 # Doc2MD Converter
@@ -23,8 +23,10 @@
 
 **最终用户（无需编译）：**
 
-1. 前往 [Releases](../../releases) 下载最新版 Windows 安装包（自包含单文件，免安装 .NET）
-2. 解压后双击 `Doc2MD.Converter.exe`
+1. 前往 [Releases](../../releases) 下载安装包：
+   - **一键安装版（推荐）**：Doc2MD-Converter-1.0.0-Setup.exe（约 535MB，内置全部引擎，双击安装即全功能可用）
+   - **精简版**：Doc2MD.Converter.exe（约 174MB，免安装单文件，覆盖日常 80% 场景）
+2. 安装版：运行安装向导（Next → Install → Finish）；精简版：直接双击运行
 3. 将待转换文档拖入窗口（或点击"添加文件 / 添加文件夹"）
 4. 选择输出目录，点击「生成」，在输出目录查看结果
 
@@ -141,11 +143,13 @@ flowchart LR
 | LibreOffice | 旧式 .doc / .xls / .ppt 二进制 Office 格式转换 |
 | OCRmyPDF + Tesseract (chi_sim) | 扫描型 PDF 的 OCR 识别 |
 
-**部署策略（精简版优先）**：
+**部署策略（三档选择）**：
 
-- **精简版（默认）**：仅下载 `Doc2MD.Converter.exe` 即可使用，覆盖 PDF / DOCX / XLSX / PPTX 转换与公文排版等日常场景
-- **完整版**：在可上网的机器按官方指引安装 LibreOffice、Tesseract、OCRmyPDF（程序自动识别系统安装路径），解锁旧式 .doc/.xls/.ppt 与扫描 PDF OCR
-- **断网场景**：将 `tools/` 便携目录随 exe 放置，全部离线免安装（`tools/LibreOffice/` + `tools/OCRmyPDF/` 或 `tools/OCRmyPDF-slim/`）
+| 形态 | 说明 | 体积 |
+|------|------|------|
+| **一键安装版**（推荐） | 一个安装包双击安装，LibreOffice / OCRmyPDF / Tesseract 全部内置，功能全开 | 约 535MB |
+| **精简版** | 单 exe 免安装，覆盖 PDF / DOCX / XLSX / PPTX 转换与公文排版等日常场景 | 约 174MB |
+| **断网便携版** | `tools/` 目录随 exe 放置，完全离线免安装（适合内网机器） | 1GB+ |
 
 选择与安装步骤见 [部署指南](docs/内网离线部署指南.md)。
 
@@ -193,3 +197,4 @@ dotnet run --project src/Doc2MD.Converter.App
 
 MIT License，见 [LICENSE](LICENSE)。
 
+> AI生成

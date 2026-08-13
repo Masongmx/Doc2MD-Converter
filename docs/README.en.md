@@ -1,3 +1,4 @@
+﻿
 <div align="center">
 
 # Doc2MD Converter
@@ -22,8 +23,10 @@ Batch document input → format conversion / official-document typesetting → o
 
 **End users (no build needed):**
 
-1. Download the latest Windows package from [Releases](../../releases) (self-contained single file, no .NET install required)
-2. Unzip and double-click `Doc2MD.Converter.exe`
+1. Download a package from [Releases](../../releases):
+   - **Full installer (recommended)**: `Doc2MD-Converter-1.0.0-Setup.exe` (~535MB, all engines built-in, install and everything works)
+   - **Slim version**: `Doc2MD.Converter.exe` (~174MB, portable single file, covers 80% of daily scenarios)
+2. Installer: run the wizard (Next → Install → Finish); Slim: just double-click to run
 3. Drag documents into the window (or click "Add Files / Add Folder")
 4. Choose the output directory, click "Generate", and find the results in the output directory
 
@@ -139,11 +142,13 @@ Optional external tools (with clear hints when missing; core flow unaffected):
 | LibreOffice | Legacy binary Office formats (.doc / .xls / .ppt) |
 | OCRmyPDF + Tesseract (chi_sim) | OCR for scanned PDFs |
 
-**Deployment strategy (slim-first)**:
+**Deployment strategy (three tiers)**:
 
-- **Slim (default)**: just download `Doc2MD.Converter.exe` and run. Covers PDF / DOCX / XLSX / PPTX conversion and official-document formatting.
-- **Full**: install LibreOffice, Tesseract and OCRmyPDF on a networked machine following the official guides (the app auto-detects system install paths) to unlock legacy .doc/.xls/.ppt and scanned-PDF OCR.
-- **Offline**: ship the `tools/` portable directory alongside the exe. Everything runs locally without installation (`tools/LibreOffice/` + `tools/OCRmyPDF/` or `tools/OCRmyPDF-slim/`).
+| Tier | Description | Size |
+|------|-------------|------|
+| **Full installer** (recommended) | One installer, all engines built-in (LibreOffice / OCRmyPDF / Tesseract), everything works | ~535MB |
+| **Slim** | Single portable exe; covers PDF / DOCX / XLSX / PPTX conversion and official-document formatting | ~174MB |
+| **Offline portable** | Ship the `tools/` directory alongside the exe; fully offline, no install (for intranet) | 1GB+ |
 
 See [Deployment Guide](../docs/内网离线部署指南.md) for details.
 
@@ -190,3 +195,5 @@ Publish output goes to `publish/gui/`; copy templates to `publish/templates/` as
 ## License
 
 MIT License — see [LICENSE](../LICENSE).
+
+> AI生成
