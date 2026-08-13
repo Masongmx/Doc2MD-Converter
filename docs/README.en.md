@@ -142,13 +142,12 @@ Optional external tools (with clear hints when missing; core flow unaffected):
 | LibreOffice | Legacy binary Office formats (.doc / .xls / .ppt) |
 | OCRmyPDF + Tesseract (chi_sim) | OCR for scanned PDFs |
 
-**Deployment strategy (three tiers)**:
+**Deployment strategy**:
 
 | Tier | Description | Size |
 |------|-------------|------|
-| **Full installer** (recommended) | One installer, all engines built-in (LibreOffice / OCRmyPDF / Tesseract), everything works | ~535MB |
-| **Slim** | Single portable exe; covers PDF / DOCX / XLSX / PPTX conversion and official-document formatting | ~174MB |
-| **Offline portable** | Ship the `tools/` directory alongside the exe; fully offline, no install (for intranet) | 1GB+ |
+| **Full installer** (recommended) | All engines built-in (LibreOffice / OCRmyPDF / Tesseract), everything works | ~535MB |
+| **Slim** | Single portable exe; covers 80% of daily scenarios (legacy formats/OCR need manual dependency install) | ~174MB |
 
 See [Deployment Guide](../docs/内网离线部署指南.md) for details.
 

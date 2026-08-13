@@ -143,13 +143,12 @@ flowchart LR
 | LibreOffice | 旧式 .doc / .xls / .ppt 二进制 Office 格式转换 |
 | OCRmyPDF + Tesseract (chi_sim) | 扫描型 PDF 的 OCR 识别 |
 
-**部署策略（三档选择）**：
+**部署策略**：
 
 | 形态 | 说明 | 体积 |
 |------|------|------|
-| **一键安装版**（推荐） | 一个安装包双击安装，LibreOffice / OCRmyPDF / Tesseract 全部内置，功能全开 | 约 535MB |
-| **精简版** | 单 exe 免安装，覆盖 PDF / DOCX / XLSX / PPTX 转换与公文排版等日常场景 | 约 174MB |
-| **断网便携版** | `tools/` 目录随 exe 放置，完全离线免安装（适合内网机器） | 1GB+ |
+| **一键安装版**（推荐） | 安装包内置 LibreOffice / OCRmyPDF / Tesseract，功能全开 | 约 535MB |
+| **精简版** | 单 exe 免安装，覆盖日常 80% 场景（旧格式/OCR 需手动装依赖） | 约 174MB |
 
 选择与安装步骤见 [部署指南](docs/内网离线部署指南.md)。
 
