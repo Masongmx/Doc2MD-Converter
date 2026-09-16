@@ -30,6 +30,7 @@ public class AppConfig
     public TemplateSettings Templates { get; set; } = new();
     public PreviewSettings Preview { get; set; } = new();
     public RecentState Recent { get; set; } = new();
+    public Humanizer.HumanizerOptions Humanizer { get; set; } = new();
 }
 
 public class GeneralSettings

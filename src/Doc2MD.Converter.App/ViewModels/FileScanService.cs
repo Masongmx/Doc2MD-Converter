@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using Doc2MD.Models;
 using Doc2MD.Services;
 
@@ -104,6 +104,18 @@ internal sealed class FileScanService
 
     private bool ShouldIgnorePath(string path)
     {
+        var fileName = Path.GetFileName(path);
+        if (string.IsNullOrEmpty(fileName)) return false;
+
+        // 自动过滤 Office 临时锁定文件（如 ~$文档.docx、~$表格.xlsx）及系统垃圾文件
+        if (fileName.StartsWith("~$", StringComparison.OrdinalIgnoreCase) ||
+            fileName.Equals("Thumbs.db", StringComparison.OrdinalIgnoreCase) ||
+            fileName.Equals(".DS_Store", StringComparison.OrdinalIgnoreCase) ||
+            fileName.Equals("desktop.ini", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
         if (!_config.Conversion.IgnoreHiddenFiles)
         {
             return false;
@@ -112,7 +124,7 @@ internal sealed class FileScanService
         try
         {
             var attributes = System.IO.File.GetAttributes(path);
-            return attributes.HasFlag(FileAttributes.Hidden) || Path.GetFileName(path).StartsWith('.');
+            return attributes.HasFlag(FileAttributes.Hidden) || fileName.StartsWith('.');
         }
         catch
         {

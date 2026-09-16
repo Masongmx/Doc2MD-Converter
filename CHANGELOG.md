@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-16
+
+### Added
+- **失败案例处理机制（Failures 子系统）**：新增 `RuleBasedFailureDiagnoser` 诊断 8 大根因（进程锁、加密、缺失依赖、OOM、损坏等），`PathSanitizer` 隐私脱敏，`JsonFailureRepository` 知识库持久化，`RetryOrchestrator` 配合针对性策略（释放重试、OCR降级、快速失败等），彻底消除无意义死循环重试。
+- **Markdown 格式可读性优化（Humanizer 中间件管线）**：新增 `HumanizerPipeline` 与 5 大转换器（`TocGeneratorTransform` 生成带锚点目录、`HeadingNormalizerTransform` 修复跳级标题、`TableFormatterTransform` 标准化表格、`ListNormalizerTransform` 规范嵌套列表缩进、`DocHighlightTransform` 公文要素语义高亮），严格兼容下游 AI/RAG。
+- **真实使用场景测试体系（Scenario Tests）**：新增 `ScenarioTests.cs`，覆盖长文档阅读、复制/分享去杂、进程锁/损坏文件自愈、双轨 Frontmatter 兼容性。
+- **GitHub 开源工程与社区治理**：配置 `.github/workflows/dotnet-ci.yml` 自动化 CI 流水线、Bug 与 Feature Issue 模板、PR 模板、`CONTRIBUTING.md` 贡献指南与 `SECURITY.md` 安全政策。
+
+### Fixed
+- **`WordParser` 多线程并发状态污染（B-01 / B-02）**：移除实例级字段 `_mainPart` 与 `_orderedListCounters`，引入局部上下文 `WordParseContext`，杜绝并发转换时列表编号互相串扰。
+- **`PdfParser` 异常记录规范化（B-03）**：移除图片提取空 catch，补充 `LoggingService.Warning` 警告日志。
+- **`FileScanService` 临时文件过滤**：自动过滤 Office 锁文件（`~$*.docx` / `~$*.xlsx`）及系统隐藏垃圾文件（`Thumbs.db`、`.DS_Store`、`desktop.ini`）。
+- **主题色板数据驱动重构（TD-2 / M-02）**：`App.xaml.cs` 将亮/暗色硬编码色板重构为 `DarkPalette` 与 `LightPalette` 静态字典映射。
+
 ## [1.0.0] - 2026-08-12
 
 ### Fixed

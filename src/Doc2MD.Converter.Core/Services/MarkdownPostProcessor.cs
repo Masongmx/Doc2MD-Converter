@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -24,6 +24,8 @@ public static class MarkdownPostProcessor
         var aigcResult = AigcWatermarkFilter.Filter(rawMarkdown);
         if (aigcResult.HasWatermark)
         {
+            conversionResult.Metadata.AigcWatermarkCount = aigcResult.RemovedBlocks;
+            conversionResult.Metadata.AigcDetectedTypes = aigcResult.DetectedTypes;
             conversionResult.Quality.Warnings.Add(ConversionWarning.Create(
                 "W_AIGC_WATERMARK",
                 $"检测到 AIGC 水印污染，已过滤 {aigcResult.RemovedBlocks} 处（类型: {string.Join(", ", aigcResult.DetectedTypes.Distinct())}）",

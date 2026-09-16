@@ -1,0 +1,52 @@
+name: 🐛 Bug 报告 (Bug Report)
+description: 提交转换失败、UI 异常或程序崩溃等问题
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你反馈问题！请尽量提供详细信息以便我们快速复现和定位。
+  - type: dropdown
+    id: mode
+    attributes:
+      label: 涉及功能模式
+      options:
+        - 文档转 Markdown (Doc to Markdown)
+        - Markdown 转 DOCX (Markdown to Docx)
+        - 一键排版 (Format Doc)
+        - 其他 / 通用界面 (UI / Other)
+    validations:
+      required: true
+  - type: input
+    id: format
+    attributes:
+      label: 文档格式与扩展名
+      placeholder: 例如：.docx, .pdf, .xlsx, .doc 等
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 请详细描述遇到了什么问题，与预期有什么不一致
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 拖入 xxx 文件
+        2. 选择 xxx 模板
+        3. 点击开始生成
+        4. 报错提示...
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 运行环境
+      placeholder: Windows 10 / 11, .NET 8, 安装版 1.0.0
+    validations:
+      required: false

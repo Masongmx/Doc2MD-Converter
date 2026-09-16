@@ -45,4 +45,12 @@ public class ConversionMetadata
     /// <summary>公文元数据提取结果（后处理阶段填充）</summary>
     [JsonIgnore]
     public GovMetadata? GovMetadata { get; set; }
+
+    // === AIGC 水印清洗统计 ===
+
+    /// <summary>检测并清除的 AIGC 水印处数</summary>
+    public int AigcWatermarkCount { get; set; }
+
+    /// <summary>检测到的 AIGC 水印类型列表</summary>
+    public List<string> AigcDetectedTypes { get; set; } = [];
 }

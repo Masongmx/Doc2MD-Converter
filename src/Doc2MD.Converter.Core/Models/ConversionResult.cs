@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using Doc2MD.Services;
 
 namespace Doc2MD.Models;
@@ -42,6 +42,9 @@ public class ConversionResult
 
     /// <summary>质量评分与警告（C4）</summary>
     public ConversionQuality Quality { get; set; } = new();
+
+    /// <summary>失败根因诊断上下文（v1.1.0 新增）</summary>
+    public Doc2MD.Failures.FailureContext? FailureContext { get; set; }
 }
 
 /// <summary>

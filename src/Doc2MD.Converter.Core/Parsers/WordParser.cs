@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -12,14 +12,6 @@ namespace Doc2MD.Parsers;
 
 public class WordParser : IDocumentParser
 {
-    /// <summary>缓存的 MainDocumentPart，供方法链中访问超链接关系</summary>
-    private MainDocumentPart? _mainPart;
-
-    /// <summary>有序列表编号计数器：key=(numId, ilvl)，value=当前序号</summary>
-    private readonly Dictionary<(int numId, int ilvl), int> _orderedListCounters = new();
-
-    /// <summary>编号格式缓存：key=numId，value=(ilvl → isOrdered)</summary>
-    private readonly Dictionary<int, Dictionary<int, bool>> _numberingFormatCache = new();
     public FileType SupportedType => FileType.Word;
     public ConversionTarget Target => ConversionTarget.Markdown;
 
@@ -87,13 +79,7 @@ public class WordParser : IDocumentParser
             }
 
             var mainPart = doc.MainDocumentPart!;
-            _mainPart = mainPart;
-
-            // 预加载编号格式信息（用于有序列表检测）
-            LoadNumberingFormats(mainPart.NumberingDefinitionsPart);
-
-            // 检测超链接——v2.0 起保留 URL，不再丢失
-            // URL 保留在 BuildFormattedText 中处理，此处不发警告
+            var context = new WordParseContext(mainPart);
 
             // 提取图片到 ImageExports（实际字节提取）
             bool hasImageParts = mainPart.ImageParts.Any();
@@ -187,7 +173,7 @@ public class WordParser : IDocumentParser
             foreach (var element in body.Elements())
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var parsed = ParseElement(element);
+                var parsed = ParseElement(element, context);
                 if (!string.IsNullOrEmpty(parsed))
                 {
                     sb.AppendLine(parsed);
@@ -236,20 +222,20 @@ public class WordParser : IDocumentParser
         return result;
     }
 
-    private string ParseElement(OpenXmlElement element)
+    private string ParseElement(OpenXmlElement element, WordParseContext context)
     {
         if (element is Paragraph para)
         {
-            return ParseParagraph(para);
+            return ParseParagraph(para, context);
         }
         if (element is Table table)
         {
-            return ParseTable(table);
+            return ParseTable(table, context);
         }
         return string.Empty;
     }
 
-    private string ParseParagraph(Paragraph para)
+    private string ParseParagraph(Paragraph para, WordParseContext context)
     {
         // 重置有序列表计数器（当段落不属于列表时）
         var numberingProps = para.ParagraphProperties?.NumberingProperties;
@@ -259,7 +245,7 @@ public class WordParser : IDocumentParser
         // 如果段落没有编号属性，重置所有计数器（退出列表）
         if (numId == null || numId == 0)
         {
-            _orderedListCounters.Clear();
+            context.OrderedListCounters.Clear();
         }
 
         // 先获取纯文本用于标题/列表检测
@@ -278,20 +264,20 @@ public class WordParser : IDocumentParser
             }
             if (style.Contains("List") || style.Contains("列表"))
             {
-                var prefix = GetListPrefix(para);
-                return $"{prefix}{BuildFormattedText(para)}";
+                var prefix = GetListPrefix(para, context);
+                return $"{prefix}{BuildFormattedText(para, context)}";
             }
         }
 
         // 编号属性检测
         if (para.ParagraphProperties?.NumberingProperties != null)
         {
-            var prefix = GetListPrefix(para);
-            return $"{prefix}{BuildFormattedText(para)}";
+            var prefix = GetListPrefix(para, context);
+            return $"{prefix}{BuildFormattedText(para, context)}";
         }
 
         // 普通正文，保留行内格式
-        return BuildFormattedText(para);
+        return BuildFormattedText(para, context);
     }
 
     /// <summary>
@@ -299,7 +285,7 @@ public class WordParser : IDocumentParser
     /// 遍历 paragraph.ChildElements 以覆盖 Hyperlink 内的 Run。
     /// v2.0: 超链接保留 URL，输出 [text](url) 格式。
     /// </summary>
-    private string BuildFormattedText(Paragraph para)
+    private string BuildFormattedText(Paragraph para, WordParseContext context)
     {
         var sb = new StringBuilder();
 
@@ -322,7 +308,7 @@ public class WordParser : IDocumentParser
                 var linkText = textBuilder.ToString();
 
                 // 解析 URL
-                var url = ResolveHyperlinkUrl(hyperlink);
+                var url = ResolveHyperlinkUrl(hyperlink, context);
 
                 if (!string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(linkText))
                 {
@@ -347,15 +333,15 @@ public class WordParser : IDocumentParser
     /// <summary>
     /// 解析 Hyperlink 元素的 URL（外部链接或内部书签锚点）
     /// </summary>
-    private string? ResolveHyperlinkUrl(Hyperlink hyperlink)
+    private string? ResolveHyperlinkUrl(Hyperlink hyperlink, WordParseContext context)
     {
-        if (_mainPart == null) return null;
+        if (context.MainPart == null) return null;
 
         // 外部链接：通过 r:id 查找 HyperlinkRelationship
         var rid = hyperlink.Id?.Value;
         if (!string.IsNullOrEmpty(rid))
         {
-            var rel = _mainPart.HyperlinkRelationships
+            var rel = context.MainPart.HyperlinkRelationships
                 .FirstOrDefault(r => r.Id == rid);
             return rel?.Uri?.AbsoluteUri;
         }
@@ -412,7 +398,7 @@ public class WordParser : IDocumentParser
     /// 获取列表前缀（支持有序和无序列表）
     /// v2.0: 通过 NumberingDefinitionsPart 判断编号格式，有序列表输出序号
     /// </summary>
-    private string GetListPrefix(Paragraph para)
+    private string GetListPrefix(Paragraph para, WordParseContext context)
     {
         var numProps = para.ParagraphProperties?.NumberingProperties;
         if (numProps == null) return "- ";
@@ -424,7 +410,7 @@ public class WordParser : IDocumentParser
 
         // 查找该 numId + ilvl 是否为有序列表
         bool isOrdered = false;
-        if (_numberingFormatCache.TryGetValue(numId.Value, out var levelMap))
+        if (context.NumberingFormatCache.TryGetValue(numId.Value, out var levelMap))
         {
             levelMap.TryGetValue(ilvl, out isOrdered);
         }
@@ -434,65 +420,20 @@ public class WordParser : IDocumentParser
 
         // 有序列表：递增计数器
         var key = (numId.Value, ilvl);
-        if (!_orderedListCounters.ContainsKey(key))
-            _orderedListCounters[key] = 1;
+        if (!context.OrderedListCounters.ContainsKey(key))
+            context.OrderedListCounters[key] = 1;
 
-        var currentNum = _orderedListCounters[key];
-        _orderedListCounters[key]++;
+        var currentNum = context.OrderedListCounters[key];
+        context.OrderedListCounters[key]++;
 
         // 重置下级编号（嵌套列表场景：重新进入上级时下级重置）
-        foreach (var k in _orderedListCounters.Keys.ToList())
+        foreach (var k in context.OrderedListCounters.Keys.ToList())
         {
             if (k.numId == numId.Value && k.ilvl > ilvl)
-                _orderedListCounters[k] = 1;
+                context.OrderedListCounters[k] = 1;
         }
 
         return $"{currentNum}. ";
-    }
-
-    /// <summary>
-    /// 预加载编号格式信息：判断每个 numbering instance 的每一级是否为有序编号
-    /// </summary>
-    private void LoadNumberingFormats(NumberingDefinitionsPart? numberingPart)
-    {
-        if (numberingPart == null) return;
-
-        var numbering = numberingPart.Numbering;
-        if (numbering == null) return;
-
-        // 构建 abstractNumId → (ilvl → numFmt) 映射
-        var abstractFormats = new Dictionary<int, Dictionary<int, string>>();
-        foreach (var absNum in numbering.Elements<AbstractNum>())
-        {
-            var absId = absNum.AbstractNumberId?.Value ?? 0;
-            var levels = new Dictionary<int, string>();
-            foreach (var level in absNum.Elements<Level>())
-            {
-                var ilvl = level.LevelIndex?.Value ?? 0;
-                var numFmt = level.NumberingFormat?.Val?.Value ?? NumberFormatValues.Bullet;
-                levels[ilvl] = numFmt.ToString()!;
-            }
-            abstractFormats[absId] = levels;
-        }
-
-        // 构建 numId → (ilvl → isOrdered) 映射
-        foreach (var numInstance in numbering.Elements<NumberingInstance>())
-        {
-            var numId = numInstance.NumberID?.Value ?? 0;
-            var absNumId = numInstance.AbstractNumId?.Val?.Value ?? 0;
-
-            if (!abstractFormats.TryGetValue(absNumId, out var levels)) continue;
-
-            var levelMap = new Dictionary<int, bool>();
-            foreach (var (ilvl, fmtStr) in levels)
-            {
-                // 有序格式：decimal, decimalEnclosed, decimalZero, upperRoman, lowerRoman,
-                //           upperLetter, lowerLetter, chicago, ordinal, cardinal, etc.
-                bool isOrdered = IsOrderedNumberFormat(fmtStr);
-                levelMap[ilvl] = isOrdered;
-            }
-            _numberingFormatCache[numId] = levelMap;
-        }
     }
 
     /// <summary>
@@ -513,7 +454,7 @@ public class WordParser : IDocumentParser
         return 1;
     }
 
-    private string ParseTable(Table table)
+    private string ParseTable(Table table, WordParseContext context)
     {
         var sb = new StringBuilder();
         var rows = table.Elements<TableRow>().ToList();
@@ -521,15 +462,19 @@ public class WordParser : IDocumentParser
         if (rows.Count == 0) return string.Empty;
 
         var cellCount = rows[0].Elements<TableCell>().Count();
+        if (cellCount == 0) return string.Empty;
         
         for (int i = 0; i < rows.Count; i++)
         {
             var cells = rows[i].Elements<TableCell>()
-                .Select(c => FormatCellText(c).Trim())
+                .Select(c => FormatCellText(c, context).Trim())
                 .ToList();
             
             while (cells.Count < cellCount)
                 cells.Add("");
+
+            if (cells.Count > cellCount)
+                cells = cells.Take(cellCount).ToList();
             
             sb.Append("| " + string.Join(" | ", cells) + " |");
             
@@ -550,15 +495,69 @@ public class WordParser : IDocumentParser
     /// <summary>
     /// 格式化单元格文本，保留行内格式
     /// </summary>
-    private string FormatCellText(TableCell cell)
+    private string FormatCellText(TableCell cell, WordParseContext context)
     {
         var sb = new StringBuilder();
         foreach (var para in cell.Elements<Paragraph>())
         {
             if (sb.Length > 0) sb.Append(" ");
-            sb.Append(BuildFormattedText(para));
+            sb.Append(BuildFormattedText(para, context));
         }
         // 转义管道符
         return sb.ToString().Replace("|", "\\|").Replace("\n", " ").Replace("\r", "");
+    }
+
+    /// <summary>
+    /// 单次 Word 文档解析的方法级上下文，确保并发解析时完全隔离无状态泄漏
+    /// </summary>
+    internal sealed class WordParseContext
+    {
+        public MainDocumentPart? MainPart { get; }
+        public Dictionary<(int numId, int ilvl), int> OrderedListCounters { get; } = new();
+        public Dictionary<int, Dictionary<int, bool>> NumberingFormatCache { get; } = new();
+
+        public WordParseContext(MainDocumentPart? mainPart = null)
+        {
+            MainPart = mainPart;
+            if (mainPart != null)
+            {
+                LoadNumberingFormats(mainPart.NumberingDefinitionsPart);
+            }
+        }
+
+        private void LoadNumberingFormats(NumberingDefinitionsPart? numberingPart)
+        {
+            if (numberingPart?.Numbering == null) return;
+
+            var abstractFormats = new Dictionary<int, Dictionary<int, string>>();
+            foreach (var absNum in numberingPart.Numbering.Elements<AbstractNum>())
+            {
+                var absId = absNum.AbstractNumberId?.Value ?? 0;
+                var levels = new Dictionary<int, string>();
+                foreach (var level in absNum.Elements<Level>())
+                {
+                    var ilvl = level.LevelIndex?.Value ?? 0;
+                    var numFmt = level.NumberingFormat?.Val?.Value ?? NumberFormatValues.Bullet;
+                    levels[ilvl] = numFmt.ToString()!;
+                }
+                abstractFormats[absId] = levels;
+            }
+
+            foreach (var numInstance in numberingPart.Numbering.Elements<NumberingInstance>())
+            {
+                var numId = numInstance.NumberID?.Value ?? 0;
+                var absNumId = numInstance.AbstractNumId?.Val?.Value ?? 0;
+
+                if (!abstractFormats.TryGetValue(absNumId, out var levels)) continue;
+
+                var levelMap = new Dictionary<int, bool>();
+                foreach (var (ilvl, fmtStr) in levels)
+                {
+                    bool isOrdered = IsOrderedNumberFormat(fmtStr);
+                    levelMap[ilvl] = isOrdered;
+                }
+                NumberingFormatCache[numId] = levelMap;
+            }
+        }
     }
 }

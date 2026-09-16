@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Doc2MD.Models;
@@ -129,16 +129,16 @@ public class PdfParser : IDocumentParser
                                     Location = $"第 {pageCount} 页"
                                 });
                             }
-                            catch
+                            catch (Exception ex)
                             {
-                                // 单个图片提取失败不阻断流程
+                                LoggingService.Warning($"[PdfParser] 第 {pageCount} 页图片 {imgIndex} 提取失败: {ex.Message}");
                             }
                         }
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // PdfPig 版本可能不支持 GetImages，跳过
+                    LoggingService.Warning($"[PdfParser] 第 {pageCount} 页获取图片列表失败: {ex.Message}");
                 }
 
                 var words = page.GetWords().ToList();

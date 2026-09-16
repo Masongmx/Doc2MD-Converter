@@ -31,6 +31,8 @@ Desktop.ini
 *.log
 
 # Internal documents (never publish)
+.workbuddy/
+.github/workflows/
 产品审查报告.md
 内部文档/
 *审查报告*.md

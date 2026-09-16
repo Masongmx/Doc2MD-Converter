@@ -38,13 +38,15 @@ public class WordParserUnitTests
     private static string CallGetListPrefix(Paragraph para)
     {
         var parser = new Parsers.WordParser();
-        return (string)GetListPrefixMethod.Invoke(parser, [para])!;
+        var context = new Parsers.WordParser.WordParseContext();
+        return (string)GetListPrefixMethod.Invoke(parser, [para, context])!;
     }
 
     private static string CallFormatCellText(TableCell cell)
     {
         var parser = new Parsers.WordParser();
-        return (string)FormatCellTextMethod.Invoke(parser, [cell])!;
+        var context = new Parsers.WordParser.WordParseContext();
+        return (string)FormatCellTextMethod.Invoke(parser, [cell, context])!;
     }
 
     // === ExtractHeadingLevel ===
@@ -143,5 +145,37 @@ public class WordParserUnitTests
             new Paragraph(new Run(new Text("第一行"))),
             new Paragraph(new Run(new Text("第二行"))));
         Assert.Equal("第一行 第二行", CallFormatCellText(cell));
+    }
+
+    [Fact]
+    public void WordParseContext_IndependentInstances_DoNotShareState()
+    {
+        var ctx1 = new Parsers.WordParser.WordParseContext();
+        var ctx2 = new Parsers.WordParser.WordParseContext();
+
+        ctx1.OrderedListCounters[(1, 0)] = 5;
+        Assert.False(ctx2.OrderedListCounters.ContainsKey((1, 0)));
+        Assert.Equal(5, ctx1.OrderedListCounters[(1, 0)]);
+    }
+
+    [Fact]
+    public async Task WordParser_CanParseConcurrently_WithoutStatePollution()
+    {
+        var parser = new Parsers.WordParser();
+        var tasks = Enumerable.Range(0, 10).Select(_ => Task.Run(() =>
+        {
+            var ctx = new Parsers.WordParser.WordParseContext();
+            var para = new Paragraph(
+                new ParagraphProperties(
+                    new NumberingProperties(
+                        new NumberingId { Val = 1 },
+                        new NumberingLevelReference { Val = 0 })));
+            
+            // Should produce valid prefix without throwing
+            return (string)GetListPrefixMethod.Invoke(parser, [para, ctx])!;
+        })).ToArray();
+
+        var results = await Task.WhenAll(tasks);
+        Assert.All(results, Assert.NotNull);
     }
 }

@@ -1,4 +1,4 @@
-﻿
+
 <div align="center">
 
 # Doc2MD Converter
@@ -6,6 +6,7 @@
 **Windows 离线文档转换与中文公文排版工具**
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![.NET CI](https://github.com/Masongmx/Doc2MD-Converter/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/Masongmx/Doc2MD-Converter/actions/workflows/dotnet-ci.yml)
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)
 ![.NET](https://img.shields.io/badge/.NET-8-512BD4)
 ![Language](https://img.shields.io/badge/language-中文%20%7C%20English-brightgreen)
@@ -58,6 +59,8 @@
 - 内置两种模板：正式公文（official-report）、会议纪要（meeting-minutes）
 - 支持自定义 Word 模板（克隆模板样式与节设置）
 - 支持目录生成、页眉页脚、正文中文字体（方正小标宋简体 / 黑体 / 仿宋_GB2312 / 楷体_GB2312）
+
+> 💡 **字体合规提示**：国家公文标准推荐使用方正小标宋、仿宋_GB2312 等中文字体。若在未安装此类字体的系统上运行，Word 会自动回落至系统默认字体；商业使用特定商业字库请遵循字体厂商的授权政策，或在排版方案中指定思源宋体/思源黑体等开源字体。
 
 ### 3. DOC / DOCX 一键规范排版
 
@@ -195,5 +198,3 @@ dotnet run --project src/Doc2MD.Converter.App
 ## 许可证
 
 MIT License，见 [LICENSE](LICENSE)。
-
-> AI生成

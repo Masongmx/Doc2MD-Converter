@@ -1,0 +1,131 @@
+---
+title: Doc2MD v1.1.0 增量架构 - 关键时序图
+---
+
+%% ========== Sequence 1: 失败处理 ==========
+sequenceDiagram
+    autonumber
+    actor User
+    participant VM as MainViewModel
+    participant CS as ConversionService
+    participant Parser as IDocumentParser
+    participant Orchestrator as FailureOrchestrator
+    participant Diagnoser as RuleBasedFailureDiagnoser
+    participant Retry as RetryOrchestrator
+    participant Strategy as IRetryStrategy
+    participant Repo as JsonFailureRepository
+    participant Logger as ILoggingService
+    participant UI as ToastService
+
+    User->>VM: 点击"开始转换"
+    VM->>CS: ConvertFileAsync(file, ...)
+    CS->>Parser: Parse(path, ...)
+    Parser-->>CS: 抛 PdfDocumentEncryptedException
+    CS->>Orchestrator: HandleAsync(file, ex, result=null)
+
+    Orchestrator->>Diagnoser: Diagnose(ex, result)
+    Diagnoser->>Diagnoser: 规则匹配 (异常类型 → SourceFileEncrypted)
+    Diagnoser-->>Orchestrator: FailureDiagnosis(Category=Encrypted, IsRetryable=false)
+
+    alt IsRetryable == true
+        Orchestrator->>Retry: RunAsync(ctx)
+        Retry->>Strategy: 匹配 Strategy.ExecuteAsync(ctx)
+        Strategy-->>Retry: RetryResult
+    else IsRetryable == false
+        Orchestrator->>Orchestrator: 跳过重试
+    end
+
+    Orchestrator->>Repo: 检查去重 (Sha256+Category)
+    alt 重复
+        Orchestrator->>Repo: 累加 RetryCount
+    else 新增
+        Orchestrator->>Repo: Save(FailureRecord)
+        Repo->>Logger: Info("[FailureLibrary] saved")
+    end
+
+    Orchestrator-->>CS: 返回
+    CS-->>VM: file.Status = Skipped
+    VM->>UI: Toast("🔒 文件已加密，已跳过")
+
+    User->>VM: 右键 → "诊断详情"
+    VM->>Repo: GetBySha(sha, category)
+    Repo-->>VM: FailureRecord
+    VM->>UI: 弹出详情面板
+
+%% ========== Sequence 2: Humanizer 双轨管线 ==========
+sequenceDiagram
+    autonumber
+    participant Parser as IDocumentParser
+    participant CS as ConversionService
+    participant MPP as MarkdownPostProcessor
+    participant Hum as HumanizerMiddleware
+    participant Opts as HumanizerOptions
+    participant Trans as 5 Transforms
+    participant Writer as OutputPackageWriter
+
+    Parser->>CS: Parse → result.RawMarkdown
+    CS->>CS: 读取 config.HumanReadable.Enabled
+
+    alt Enabled == false
+        CS->>MPP: Process(rawMarkdown)
+        MPP-->>CS: aiMarkdown
+        CS->>Writer: Write(aiMarkdown, ...)
+        Note over CS: ✅ AI 路径零回归
+    else Enabled == true
+        CS->>MPP: Process(rawMarkdown)
+        MPP-->>CS: aiMarkdown
+
+        CS->>Hum: ApplyAsync(aiMarkdown, result)
+        Hum->>Opts: 检查每个 transform 开关
+        Hum->>Trans: HeadingNormalizer
+        Trans-->>Hum: md1
+        Hum->>Trans: ParagraphSpacer
+        Trans-->>Hum: md2
+        Hum->>Trans: TableOptimizer
+        Trans-->>Hum: md3
+        Hum->>Trans: ListNormalizer
+        Trans-->>Hum: md4
+        Hum->>Trans: TocGenerator
+        Trans-->>Hum: humanMarkdown
+        Hum-->>CS: humanMarkdown
+        CS->>Writer: Write(humanMarkdown, ...)
+        Note over CS: 输出 document.md（人类）+ document.ai.md（AI）
+    end
+
+%% ========== Sequence 3: 场景测试 ==========
+sequenceDiagram
+    autonumber
+    participant CI as CI Runner
+    participant Runner as ScenarioRunner
+    participant YAML as YamlDotNet
+    participant Ctx as ScenarioContext
+    participant Steps as Steps Pipeline
+    participant App as Doc2MD.Converter
+    participant Assert as MetricAssert
+    participant Report as HtmlReportWriter
+
+    CI->>Runner: dotnet test --filter Category=Scenario
+    Runner->>YAML: 加载 Scenarios/**/*.yaml
+    YAML-->>Runner: List~ScenarioDefinition~
+
+    loop 每个 scenario
+        Runner->>Ctx: Create(scenario, fixture)
+        Runner->>Steps: ExecuteAsync(ctx, steps)
+        loop 每个 step
+            Steps->>App: 调用 API/UI
+            App-->>Steps: 实际结果
+            Steps->>Ctx: 记录耗时/产物
+        end
+        Steps-->>Runner: ctx.Metrics
+        Runner->>Assert: Check(metrics, expected)
+        Assert-->>Runner: Pass/Fail
+
+        alt Pass
+            Runner->>Report: AppendSuccess
+        else Fail
+            Runner->>Report: AppendFailure + Trace
+        end
+    end
+
+    Runner->>Report: GenerateAsync()
+    Report-->>CI: report.html + junit.xml

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -90,129 +90,131 @@ public partial class App : Application
         UpdateThemeSubscription(appearance.Theme);
     }
 
+    private static readonly Dictionary<string, string> DarkPalette = new()
+    {
+        ["BgMainBrush"] = "#0F172A",
+        ["BgCardBrush"] = "#111827",
+        ["BgActiveBrush"] = "#2A2113",
+        ["BgSubtleBrush"] = "#0B1220",
+        ["BgFooterBrush"] = "#0D1526",
+        ["BgFileListBrush"] = "#0D1526",
+        ["PrimaryBrush"] = "#F59E0B",
+        ["PrimaryHoverBrush"] = "#D97706",
+        ["PrimarySoftBrush"] = "#3A2A10",
+        ["TextMainBrush"] = "#F9FAFB",
+        ["TextSecondaryBrush"] = "#CBD5E1",
+        ["TextMutedBrush"] = "#94A3B8",
+        ["TextWeakBrush"] = "#64748B",
+        ["BorderBrush"] = "#334155",
+        ["BorderStrongBrush"] = "#475569",
+        ["DividerBrush"] = "#1C2536",
+        ["HeaderButtonHoverBrush"] = "#1F2937",
+        ["DangerHeaderHoverBrush"] = "#7F1D1D",
+        ["DangerHeaderForegroundBrush"] = "#FCA5A5",
+        ["DarkButtonBrush"] = "#020617",
+        ["DarkButtonHoverBrush"] = "#000000",
+        ["DisabledBackgroundBrush"] = "#334155",
+        ["DisabledForegroundBrush"] = "#64748B",
+        ["SecondaryHoverBrush"] = "#1F2937",
+        ["SecondaryDisabledBackgroundBrush"] = "#1E293B",
+        ["SecondaryDisabledForegroundBrush"] = "#64748B",
+        ["GhostHoverBrush"] = "#1F2937",
+        ["InputBackgroundBrush"] = "#1F2937",
+        ["ProgressTrackBrush"] = "#334155",
+        ["DropZoneBackgroundBrush"] = "#161F2F",
+        ["DropZoneBorderBrush"] = "#F59E0B",
+        ["SkeletonPrimaryBrush"] = "#1F2937",
+        ["SkeletonSecondaryBrush"] = "#334155",
+        ["ModeIconBorderBrush"] = "#B47A1A",
+        ["ModeIconCornerBrush"] = "#B47A1A",
+        ["StatusPendingBgBrush"] = "#1E293B",
+        ["StatusProcessingBgBrush"] = "#1E3A5F",
+        ["StatusDoneBgBrush"] = "#14412A",
+        ["StatusFailedBgBrush"] = "#4C1515",
+        ["StatusUnsupportedBgBrush"] = "#422D0E",
+        ["StatusSkippedBgBrush"] = "#1E293B",
+        ["StatusPendingFgBrush"] = "#94A3B8",
+        ["StatusProcessingFgBrush"] = "#60A5FA",
+        ["StatusDoneFgBrush"] = "#4ADE80",
+        ["StatusFailedFgBrush"] = "#F87171",
+        ["StatusUnsupportedFgBrush"] = "#FBBF24",
+        ["StatusSkippedFgBrush"] = "#94A3B8",
+        ["ToastSuccessBgBrush"] = "#14412A",
+        ["ToastWarningBgBrush"] = "#422D0E",
+        ["ToastErrorBgBrush"] = "#4C1515",
+        ["ToastInfoBgBrush"] = "#1E3A5F",
+        ["ToneSuccessBrush"] = "#4ADE80",
+        ["ToneWarningBrush"] = "#FBBF24",
+        ["ToneErrorBrush"] = "#F87171",
+        ["ToneInfoBrush"] = "#60A5FA"
+    };
+
+    private static readonly Dictionary<string, string> LightPalette = new()
+    {
+        ["BgMainBrush"] = "#E0E2E6",
+        ["BgCardBrush"] = "#FFFFFF",
+        ["BgActiveBrush"] = "#FFF3E2",
+        ["BgSubtleBrush"] = "#F3F4F6",
+        ["BgFooterBrush"] = "#F3F4F6",
+        ["BgFileListBrush"] = "#F3F4F6",
+        ["PrimaryBrush"] = "#D98212",
+        ["PrimaryHoverBrush"] = "#B96700",
+        ["PrimarySoftBrush"] = "#FFEDCA",
+        ["TextMainBrush"] = "#111827",
+        ["TextSecondaryBrush"] = "#4B5563",
+        ["TextMutedBrush"] = "#6B7280",
+        ["TextWeakBrush"] = "#9CA3AF",
+        ["BorderBrush"] = "#E5E7EB",
+        ["BorderStrongBrush"] = "#D1D5DB",
+        ["DividerBrush"] = "#D5D8DD",
+        ["HeaderButtonHoverBrush"] = "#F3F4F6",
+        ["DangerHeaderHoverBrush"] = "#FEE2E2",
+        ["DangerHeaderForegroundBrush"] = "#B91C1C",
+        ["DarkButtonBrush"] = "#111827",
+        ["DarkButtonHoverBrush"] = "#000000",
+        ["DisabledBackgroundBrush"] = "#D1D5DB",
+        ["DisabledForegroundBrush"] = "#9CA3AF",
+        ["SecondaryHoverBrush"] = "#F9FAFB",
+        ["SecondaryDisabledBackgroundBrush"] = "#F3F4F6",
+        ["SecondaryDisabledForegroundBrush"] = "#9CA3AF",
+        ["GhostHoverBrush"] = "#F3F4F6",
+        ["InputBackgroundBrush"] = "#F9FAFB",
+        ["ProgressTrackBrush"] = "#E5E7EB",
+        ["DropZoneBackgroundBrush"] = "#FFF8ED",
+        ["DropZoneBorderBrush"] = "#D4A84B",
+        ["SkeletonPrimaryBrush"] = "#F3F4F6",
+        ["SkeletonSecondaryBrush"] = "#E5E7EB",
+        ["ModeIconBorderBrush"] = "#D4A84B",
+        ["ModeIconCornerBrush"] = "#D4A84B",
+        ["StatusPendingBgBrush"] = "#F3F4F6",
+        ["StatusProcessingBgBrush"] = "#DBEAFE",
+        ["StatusDoneBgBrush"] = "#DCFCE7",
+        ["StatusFailedBgBrush"] = "#FEE2E2",
+        ["StatusUnsupportedBgBrush"] = "#FEF3C7",
+        ["StatusSkippedBgBrush"] = "#F3F4F6",
+        ["StatusPendingFgBrush"] = "#6B7280",
+        ["StatusProcessingFgBrush"] = "#2563EB",
+        ["StatusDoneFgBrush"] = "#16A34A",
+        ["StatusFailedFgBrush"] = "#DC2626",
+        ["StatusUnsupportedFgBrush"] = "#D97706",
+        ["StatusSkippedFgBrush"] = "#6B7280",
+        ["ToastSuccessBgBrush"] = "#ECFDF3",
+        ["ToastWarningBgBrush"] = "#FFF7ED",
+        ["ToastErrorBgBrush"] = "#FEF2F2",
+        ["ToastInfoBgBrush"] = "#EFF6FF",
+        ["ToneSuccessBrush"] = "#16A34A",
+        ["ToneWarningBrush"] = "#F59E0B",
+        ["ToneErrorBrush"] = "#DC2626",
+        ["ToneInfoBrush"] = "#2563EB"
+    };
+
     private void ApplyTheme(ThemeMode theme)
     {
-        if (theme == ThemeMode.Dark)
+        var palette = theme == ThemeMode.Dark ? DarkPalette : LightPalette;
+        foreach (var (key, hex) in palette)
         {
-            SetBrushColor("BgMainBrush", "#0F172A");
-            SetBrushColor("BgCardBrush", "#111827");
-            SetBrushColor("BgActiveBrush", "#2A2113");
-            SetBrushColor("BgSubtleBrush", "#0B1220");
-            SetBrushColor("BgFooterBrush", "#0D1526");
-            SetBrushColor("BgFileListBrush", "#0D1526");
-            SetBrushColor("PrimaryBrush", "#F59E0B");
-            SetBrushColor("PrimaryHoverBrush", "#D97706");
-            SetBrushColor("PrimarySoftBrush", "#3A2A10");
-            SetBrushColor("TextMainBrush", "#F9FAFB");
-            SetBrushColor("TextSecondaryBrush", "#CBD5E1");
-            SetBrushColor("TextMutedBrush", "#94A3B8");
-            SetBrushColor("TextWeakBrush", "#64748B");
-            SetBrushColor("BorderBrush", "#334155");
-            SetBrushColor("BorderStrongBrush", "#475569");
-            SetBrushColor("DividerBrush", "#1C2536");
-            SetBrushColor("HeaderButtonHoverBrush", "#1F2937");
-            SetBrushColor("DangerHeaderHoverBrush", "#7F1D1D");
-            SetBrushColor("DangerHeaderForegroundBrush", "#FCA5A5");
-            SetBrushColor("DarkButtonBrush", "#020617");
-            SetBrushColor("DarkButtonHoverBrush", "#000000");
-            SetBrushColor("DisabledBackgroundBrush", "#334155");
-            SetBrushColor("DisabledForegroundBrush", "#64748B");
-            SetBrushColor("SecondaryHoverBrush", "#1F2937");
-            SetBrushColor("SecondaryDisabledBackgroundBrush", "#1E293B");
-            SetBrushColor("SecondaryDisabledForegroundBrush", "#64748B");
-            SetBrushColor("GhostHoverBrush", "#1F2937");
-            SetBrushColor("InputBackgroundBrush", "#1F2937");
-            SetBrushColor("ProgressTrackBrush", "#334155");
-            SetBrushColor("DropZoneBackgroundBrush", "#161F2F");
-            SetBrushColor("DropZoneBorderBrush", "#F59E0B");
-            SetBrushColor("SkeletonPrimaryBrush", "#1F2937");
-            SetBrushColor("SkeletonSecondaryBrush", "#334155");
-            SetBrushColor("ModeIconBorderBrush", "#B47A1A");
-            SetBrushColor("ModeIconCornerBrush", "#B47A1A");
-            // Status indicator dark colors (F-09)
-            SetBrushColor("StatusPendingBgBrush", "#1E293B");
-            SetBrushColor("StatusProcessingBgBrush", "#1E3A5F");
-            SetBrushColor("StatusDoneBgBrush", "#14412A");
-            SetBrushColor("StatusFailedBgBrush", "#4C1515");
-            SetBrushColor("StatusUnsupportedBgBrush", "#422D0E");
-            SetBrushColor("StatusSkippedBgBrush", "#1E293B");
-            SetBrushColor("StatusPendingFgBrush", "#94A3B8");
-            SetBrushColor("StatusProcessingFgBrush", "#60A5FA");
-            SetBrushColor("StatusDoneFgBrush", "#4ADE80");
-            SetBrushColor("StatusFailedFgBrush", "#F87171");
-            SetBrushColor("StatusUnsupportedFgBrush", "#FBBF24");
-            SetBrushColor("StatusSkippedFgBrush", "#94A3B8");
-            // Toast dark colors (F-10)
-            SetBrushColor("ToastSuccessBgBrush", "#14412A");
-            SetBrushColor("ToastWarningBgBrush", "#422D0E");
-            SetBrushColor("ToastErrorBgBrush", "#4C1515");
-            SetBrushColor("ToastInfoBgBrush", "#1E3A5F");
-            // Tone dark colors
-            SetBrushColor("ToneSuccessBrush", "#4ADE80");
-            SetBrushColor("ToneWarningBrush", "#FBBF24");
-            SetBrushColor("ToneErrorBrush", "#F87171");
-            SetBrushColor("ToneInfoBrush", "#60A5FA");
-            return;
+            SetBrushColor(key, hex);
         }
-
-        SetBrushColor("BgMainBrush", "#E0E2E6");
-        SetBrushColor("BgCardBrush", "#FFFFFF");
-        SetBrushColor("BgActiveBrush", "#FFF3E2");
-        SetBrushColor("BgSubtleBrush", "#F3F4F6");
-        SetBrushColor("BgFooterBrush", "#F3F4F6");
-        SetBrushColor("BgFileListBrush", "#F3F4F6");
-        SetBrushColor("PrimaryBrush", "#D98212");
-        SetBrushColor("PrimaryHoverBrush", "#B96700");
-        SetBrushColor("PrimarySoftBrush", "#FFEDCA");
-        SetBrushColor("TextMainBrush", "#111827");
-        SetBrushColor("TextSecondaryBrush", "#4B5563");
-        SetBrushColor("TextMutedBrush", "#6B7280");
-        SetBrushColor("TextWeakBrush", "#9CA3AF");
-        SetBrushColor("BorderBrush", "#E5E7EB");
-        SetBrushColor("BorderStrongBrush", "#D1D5DB");
-        SetBrushColor("DividerBrush", "#D5D8DD");
-        SetBrushColor("HeaderButtonHoverBrush", "#F3F4F6");
-        SetBrushColor("DangerHeaderHoverBrush", "#FEE2E2");
-        SetBrushColor("DangerHeaderForegroundBrush", "#B91C1C");
-        SetBrushColor("DarkButtonBrush", "#111827");
-        SetBrushColor("DarkButtonHoverBrush", "#000000");
-        SetBrushColor("DisabledBackgroundBrush", "#D1D5DB");
-        SetBrushColor("DisabledForegroundBrush", "#9CA3AF");
-        SetBrushColor("SecondaryHoverBrush", "#F9FAFB");
-        SetBrushColor("SecondaryDisabledBackgroundBrush", "#F3F4F6");
-        SetBrushColor("SecondaryDisabledForegroundBrush", "#9CA3AF");
-        SetBrushColor("GhostHoverBrush", "#F3F4F6");
-        SetBrushColor("InputBackgroundBrush", "#F9FAFB");
-        SetBrushColor("ProgressTrackBrush", "#E5E7EB");
-        SetBrushColor("DropZoneBackgroundBrush", "#FFF8ED");
-        SetBrushColor("DropZoneBorderBrush", "#D4A84B");
-        SetBrushColor("SkeletonPrimaryBrush", "#F3F4F6");
-        SetBrushColor("SkeletonSecondaryBrush", "#E5E7EB");
-        SetBrushColor("ModeIconBorderBrush", "#D4A84B");
-        SetBrushColor("ModeIconCornerBrush", "#D4A84B");
-        // Status indicator light colors (F-09)
-        SetBrushColor("StatusPendingBgBrush", "#F3F4F6");
-        SetBrushColor("StatusProcessingBgBrush", "#DBEAFE");
-        SetBrushColor("StatusDoneBgBrush", "#DCFCE7");
-        SetBrushColor("StatusFailedBgBrush", "#FEE2E2");
-        SetBrushColor("StatusUnsupportedBgBrush", "#FEF3C7");
-        SetBrushColor("StatusSkippedBgBrush", "#F3F4F6");
-        SetBrushColor("StatusPendingFgBrush", "#6B7280");
-        SetBrushColor("StatusProcessingFgBrush", "#2563EB");
-        SetBrushColor("StatusDoneFgBrush", "#16A34A");
-        SetBrushColor("StatusFailedFgBrush", "#DC2626");
-        SetBrushColor("StatusUnsupportedFgBrush", "#D97706");
-        SetBrushColor("StatusSkippedFgBrush", "#6B7280");
-        // Toast light colors (F-10)
-        SetBrushColor("ToastSuccessBgBrush", "#ECFDF3");
-        SetBrushColor("ToastWarningBgBrush", "#FFF7ED");
-        SetBrushColor("ToastErrorBgBrush", "#FEF2F2");
-        SetBrushColor("ToastInfoBgBrush", "#EFF6FF");
-        // Tone light colors
-        SetBrushColor("ToneSuccessBrush", "#16A34A");
-        SetBrushColor("ToneWarningBrush", "#F59E0B");
-        SetBrushColor("ToneErrorBrush", "#DC2626");
-        SetBrushColor("ToneInfoBrush", "#2563EB");
     }
 
     private bool _themeSubscribed;

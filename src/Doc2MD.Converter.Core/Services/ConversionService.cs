@@ -1,4 +1,6 @@
-﻿using System.IO;
+using System.IO;
+using Doc2MD.Failures;
+using Doc2MD.Humanizer;
 using Doc2MD.Models;
 using Doc2MD.Parsers;
 using Doc2MD.Services;
@@ -9,30 +11,39 @@ public class ConversionService
 {
     private readonly IParserRegistry _parserRegistry;
     private readonly ILoggingService _logger;
+    private readonly FailureOrchestrator _failureOrchestrator;
+    private readonly HumanizerPipeline _humanizerPipeline;
 
     public event EventHandler<FileItem>? FileCompleted;
 
+    public FailureOrchestrator FailureOrchestrator => _failureOrchestrator;
+    public HumanizerPipeline HumanizerPipeline => _humanizerPipeline;
+
     public ConversionService()
-        : this(new DocumentParserRegistry(), LoggingService.Logger)
+        : this(new DocumentParserRegistry(), LoggingService.Logger, new FailureOrchestrator(), new HumanizerPipeline())
     {
     }
 
-    /// <summary>
-    /// 通过解析器注册表构造转换服务。注册表负责解析器选择与配置注入，
-    /// 使转换服务不再直接持有具体解析器，提升可扩展性与可测试性。
-    /// </summary>
     public ConversionService(IParserRegistry parserRegistry)
-        : this(parserRegistry, LoggingService.Logger)
+        : this(parserRegistry, LoggingService.Logger, new FailureOrchestrator(), new HumanizerPipeline())
     {
     }
 
-    /// <summary>
-    /// 完整的注入构造函数：可注入解析器注册表与日志服务（DI 迁移 C1）。
-    /// </summary>
     public ConversionService(IParserRegistry parserRegistry, ILoggingService logger)
+        : this(parserRegistry, logger, new FailureOrchestrator(), new HumanizerPipeline())
+    {
+    }
+
+    public ConversionService(
+        IParserRegistry parserRegistry,
+        ILoggingService logger,
+        FailureOrchestrator failureOrchestrator,
+        HumanizerPipeline humanizerPipeline)
     {
         _parserRegistry = parserRegistry;
         _logger = logger;
+        _failureOrchestrator = failureOrchestrator;
+        _humanizerPipeline = humanizerPipeline;
     }
 
     /// <summary>
@@ -56,8 +67,10 @@ public class ConversionService
         {
             file.Status = FileStatus.Failed;
             file.ErrorMessage = $"不支持的文件格式: {Path.GetExtension(file.FullPath)}";
+            var nullResult = new ConversionResult { Success = false, ErrorMessage = file.ErrorMessage };
+            _failureOrchestrator.HandleFailure(nullResult, null, file.FullPath);
             FileCompleted?.Invoke(this, file);
-            return null;
+            return nullResult;
         }
 
         var currentOutputDirectory = ResolveOutputDirectory(file, outputDirectory, preserveStructure, inputRoot);
@@ -92,12 +105,19 @@ public class ConversionService
                     result.Quality.BlockCount = postResult.BlockCount;
                     result.Quality.UnsupportedObjectCount = postResult.UnsupportedObjectCount;
 
+                    // === 可读性增强中间件 ===
+                    var finalMarkdown = postResult.Markdown;
+                    if (config?.Humanizer != null && config.Humanizer.Enabled)
+                    {
+                        finalMarkdown = await _humanizerPipeline.ProcessAsync(finalMarkdown, result, config.Humanizer, cancellationToken);
+                    }
+
                     var metaJson = MetaGenerator.Generate(result);
                     var qualityJson = QualityChecker.GenerateReport(result);
 
                     var packageMode = config?.Conversion.OutputPackageMode ?? OutputPackageMode.HybridPackage;
                     var writeResult = OutputPackageWriter.Write(
-                        postResult.Markdown,
+                        finalMarkdown,
                         metaJson,
                         qualityJson,
                         result,
@@ -121,6 +141,8 @@ public class ConversionService
                 return result;
             }
 
+            // 诊断与记录失败案例
+            _failureOrchestrator.HandleFailure(result, null, file.FullPath);
             file.Status = FileStatus.Failed;
             file.ErrorMessage = result.ErrorMessage;
             _logger.Warning($"[Conversion] 失败: {file.FullPath} - {result.ErrorMessage}");
@@ -135,10 +157,12 @@ public class ConversionService
         }
         catch (Exception ex)
         {
+            var failResult = new ConversionResult { Success = false, ErrorMessage = ex.Message };
+            _failureOrchestrator.HandleFailure(failResult, ex, file.FullPath);
             file.Status = FileStatus.Failed;
-            file.ErrorMessage = ex.Message;
+            file.ErrorMessage = failResult.ErrorMessage;
             LoggingService.Error($"[Conversion] 异常: {file.FullPath}", ex);
-            return null;
+            return failResult;
         }
         finally
         {

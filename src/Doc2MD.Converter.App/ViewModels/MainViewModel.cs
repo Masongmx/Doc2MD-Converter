@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -1243,6 +1243,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public void PersistSettings(string? successMessage = null)
     {
+        // 同步模板设置到对应的 PreviewSettings
+        Settings.Preview.MarkdownToDocx.TemplatePath = Settings.Templates.DefaultDocxTemplate;
+        Settings.Preview.FormatDoc.TemplatePath = Settings.Templates.OfficialDocTemplate;
+
         _configService.Save();
         _modeOutputDirectories[AppMode.ToMarkdown] = string.IsNullOrWhiteSpace(_modeOutputDirectories[AppMode.ToMarkdown])
             ? Settings.General.DefaultOutputDir
@@ -1407,7 +1411,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
         try
         {
             // 每次排版使用当前设置构造 DocxFormatter，确保设置变更后立即生效
-            var formatter = new DocxFormatter(Settings.Preview.FormatDoc);
+            var formatSettings = Settings.Preview.FormatDoc;
+            if (string.IsNullOrWhiteSpace(formatSettings.TemplatePath) && !string.IsNullOrWhiteSpace(Settings.Templates.OfficialDocTemplate))
+            {
+                formatSettings.TemplatePath = Settings.Templates.OfficialDocTemplate;
+            }
+            var formatter = new DocxFormatter(formatSettings);
             var result = await Task.Run(() => formatter.Format(file.FullPath, outputDirectory, cancellationToken), cancellationToken);
             if (result.Success)
             {

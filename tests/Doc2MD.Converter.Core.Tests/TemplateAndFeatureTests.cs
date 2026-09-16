@@ -380,6 +380,111 @@ public class TemplateAndFeatureTests
         Assert.Null(repo.GetTemplate("no-such-template"));
     }
 
+    [Fact]
+    public void DocxFormatter_CustomTemplate_InjectsStylesAndFormats()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"Doc2MD_Test_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            // 1. 创建一个模板文件，带有自定义样式
+            var templatePath = Path.Combine(tempDir, "custom_template.docx");
+            using (var templateDoc = WordprocessingDocument.Create(templatePath, WordprocessingDocumentType.Document))
+            {
+                var mainPart = templateDoc.AddMainDocumentPart();
+                var stylesPart = mainPart.AddNewPart<StyleDefinitionsPart>();
+                stylesPart.Styles = new Styles();
+                var customStyle = new Style
+                {
+                    Type = StyleValues.Paragraph,
+                    StyleId = "CustomGovStyle1",
+                    CustomStyle = true
+                };
+                customStyle.Append(new StyleName { Val = "Custom Gov Style 1" });
+                stylesPart.Styles.Append(customStyle);
+                mainPart.Document = new Document(new Body());
+                mainPart.Document.Save();
+            }
+
+            // 2. 创建待排版的文档
+            var docxPath = Path.Combine(tempDir, "input.docx");
+            CreateSimpleDocx(docxPath);
+
+            // 3. 执行一键排版，传入模板路径
+            var formatter = new DocxFormatter(new FormatDocPreviewSettings
+            {
+                TemplatePath = templatePath
+            });
+            var result = formatter.Format(docxPath, tempDir, CancellationToken.None);
+
+            Assert.True(result.Success, result.ErrorMessage);
+            Assert.True(File.Exists(result.OutputPath));
+
+            // 4. 验证排版后输出文档是否成功注入了模板样式
+            using var outputDoc = WordprocessingDocument.Open(result.OutputPath!, false);
+            var outputStyles = outputDoc.MainDocumentPart?.StyleDefinitionsPart?.Styles;
+            Assert.NotNull(outputStyles);
+            Assert.Contains(outputStyles.Elements<Style>(), s => s.StyleId?.Value == "CustomGovStyle1");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void DocxFormatter_Gb9704Typography_AppliesCorrectFontsAndMargins()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"Doc2MD_Test_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            var docxPath = Path.Combine(tempDir, "input.docx");
+            using (var doc = WordprocessingDocument.Create(docxPath, WordprocessingDocumentType.Document))
+            {
+                var mainPart = doc.AddMainDocumentPart();
+                var body = new Body();
+                body.Append(new Paragraph(new Run(new Text("关于进一步推进信息化建设的通知"))));
+                body.Append(new Paragraph(new Run(new Text("一、总体要求"))));
+                body.Append(new Paragraph(new Run(new Text("（一）指导思想"))));
+                body.Append(new Paragraph(new Run(new Text("这是正文第一段内容，按照国家标准进行严格排版。"))));
+                mainPart.Document = new Document(body);
+                mainPart.Document.Save();
+            }
+
+            var formatter = new DocxFormatter(new FormatDocPreviewSettings
+            {
+                BodyFont = "仿宋_GB2312",
+                TitleFont = "方正小标宋简体",
+                HeadingFont = "黑体",
+                SubheadingFont = "楷体_GB2312",
+                BodyFontSizePt = 16.0,
+                TitleFontSizePt = 22.0
+            });
+            var result = formatter.Format(docxPath, tempDir, CancellationToken.None);
+
+            Assert.True(result.Success, result.ErrorMessage);
+
+            using var outputDoc = WordprocessingDocument.Open(result.OutputPath!, false);
+            var outputBody = outputDoc.MainDocumentPart?.Document.Body;
+            Assert.NotNull(outputBody);
+
+            var paragraphs = outputBody.Elements<Paragraph>().ToList();
+            Assert.True(paragraphs.Count >= 4);
+
+            // 验证页面边距（GB/T 9704 规范）
+            var sectionProps = outputBody.Elements<SectionProperties>().LastOrDefault();
+            var pageMargin = sectionProps?.GetFirstChild<PageMargin>();
+            Assert.NotNull(pageMargin);
+            Assert.NotNull(pageMargin.Top);
+            Assert.NotNull(pageMargin.Bottom);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
     // === 辅助方法 ===
 
     private static void CreateSimpleDocx(string path)

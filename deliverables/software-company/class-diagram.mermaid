@@ -1,0 +1,281 @@
+---
+title: Doc2MD v1.1.0 增量架构 - 类图
+---
+
+classDiagram
+    direction LR
+
+    namespace Models {
+        class ConversionResult {
+            +FailureContext? FailureContext
+            +Metadata ConversionMetadata
+            +Quality ConversionQuality
+            +bool Success
+            +string? RawMarkdown
+            +string? ProcessedMarkdown
+            +string? EnhancedOutputPath
+        }
+
+        class FailureContext {
+            +string SourcePath
+            +string FileSha256
+            +string ExceptionType
+            +string? ParserVersion
+            +string? SystemEnvironment
+            +DateTime OccurredAt
+            +string StackTrace
+        }
+
+        class FileItem {
+            +string Id
+            +string FullPath
+            +FileStatus Status
+            +string? ErrorMessage
+            +int RetryCount
+        }
+    }
+
+    namespace Failures {
+        class FailureCategory {
+            <<enumeration>>
+            SourceFileCorrupted
+            SourceFileEncrypted
+            FormatUnsupported
+            DependencyMissing
+            InternalException
+            UserCancelled
+            ResourceExhausted
+            FileLocked
+        }
+
+        class FailureRecord {
+            +string FailureId
+            +DateTime TimestampUtc
+            +string SourceDirectory
+            +string SourceFileName
+            +string SourceSha256
+            +FailureCategory Category
+            +string RootCause
+            +string SuggestedAction
+            +int RetryCount
+            +DateTime LastAttemptAt
+            +string? ResolvedBy
+            +string? UserNote
+        }
+
+        class IFailureRepository {
+            <<interface>>
+            +Save(FailureRecord)
+            +IReadOnlyList~FailureRecord~ Query(filter)
+            +int Count
+            +bool TryGetBySha(string sha, FailureCategory cat, FailureRecord~)
+            +void Clear()
+            +void ExportCsv(string path)
+        }
+
+        class JsonFailureRepository {
+            -string _filePath
+            -object _lock
+            -List~FailureRecord~ _cache
+            -Channel~FailureRecord~ _writeQueue
+            +Save(record)
+            +Query(filter)
+            +TryGetBySha(...)
+        }
+
+        class IFailureDiagnoser {
+            <<interface>>
+            +FailureDiagnosis Diagnose(Exception ex, ConversionResult result)
+        }
+
+        class FailureDiagnosis {
+            +FailureCategory PrimaryCategory
+            +FailureCategory? SecondaryCategory
+            +string RootCause
+            +string SuggestedAction
+            +bool IsRetryable
+            +bool IsUserActionable
+        }
+
+        class RuleBasedFailureDiagnoser {
+            -List~DiagnosisRule~ _rules
+            +Diagnose(ex, result) FailureDiagnosis
+            -MatchRule(ex, result)
+        }
+
+        class IRetryStrategy {
+            <<interface>>
+            +FailureCategory AppliesTo
+            +Task~RetryResult~ ExecuteAsync(RetryContext ctx, CancellationToken ct)
+        }
+
+        class RetryContext {
+            +FileItem File
+            +ConversionResult? LastResult
+            +FailureDiagnosis Diagnosis
+            +int AttemptCount
+            +AppConfig Config
+        }
+
+        class RetryResult {
+            +bool ShouldRetry
+            +bool Succeeded
+            +string? Message
+            +object? UserActionPayload
+        }
+
+        class RetryOrchestrator {
+            -Dictionary~FailureCategory, IRetryStrategy~ _strategies
+            +Register(IRetryStrategy)
+            +Task~RetryResult~ RunAsync(RetryContext ctx)
+            -ResolveStrategy(FailureCategory)
+        }
+
+        class FailureOrchestrator {
+            -IFailureDiagnoser _diagnoser
+            -RetryOrchestrator _retry
+            -IFailureRepository _repo
+            +Task HandleAsync(FileItem file, Exception? ex, ConversionResult? result)
+        }
+
+        class PathSanitizer {
+            <<static>>
+            +string SanitizeDirectory(string fullPath)
+            +string AnonymizeUsername(string fullPath)
+        }
+
+        class SkipAndMarkStrategy {
+            -IRetryStrategy
+            +AppliesTo SourceFileEncrypted/FormatUnsupported
+        }
+        class InstallDependencyStrategy {
+            -IRetryStrategy
+            +AppliesTo DependencyMissing
+        }
+        class OcrFallbackStrategy {
+            -IRetryStrategy
+            +AppliesTo SourceFileCorrupted
+        }
+        class DowngradeConcurrencyStrategy {
+            -IRetryStrategy
+            +AppliesTo ResourceExhausted
+        }
+        class RetryOnceStrategy {
+            -IRetryStrategy
+            +AppliesTo InternalException
+        }
+        class UnlockAndRetryStrategy {
+            -IRetryStrategy
+            +AppliesTo FileLocked
+        }
+    }
+
+    namespace Humanizer {
+        class IHumanizerMiddleware {
+            <<interface>>
+            +string Name
+            +Task~string~ ApplyAsync(string markdown, ConversionResult result)
+        }
+
+        class HumanizerMiddleware {
+            -List~IHumanizerMiddleware~ _transforms
+            -HumanizerOptions _options
+            +AddTransform(IHumanizerMiddleware)
+            +Task~string~ ApplyAsync(string markdown, ConversionResult result)
+            -string FallbackToOriginal(string original, Exception ex)
+        }
+
+        class HumanizerOptions {
+            +bool Enabled
+            +bool EnableHeadingNormalizer
+            +bool EnableParagraphSpacer
+            +bool EnableTableOptimizer
+            +bool EnableListNormalizer
+            +bool EnableTocGenerator
+            +bool EnableMetadataHighlighter
+            +int TocHeadingThreshold
+            +int TocSizeThresholdKb
+            +bool AutoDetectGovDocument
+        }
+
+        class HeadingNormalizer {
+            -IHumanizerMiddleware
+        }
+        class ParagraphSpacer {
+            -IHumanizerMiddleware
+        }
+        class TableOptimizer {
+            -IHumanizerMiddleware
+        }
+        class ListNormalizer {
+            -IHumanizerMiddleware
+        }
+        class TocGenerator {
+            -IHumanizerMiddleware
+        }
+        class MetadataHighlighter {
+            -IHumanizerMiddleware
+        }
+        class ImagePlaceholderInserter {
+            -IHumanizerMiddleware
+        }
+        class IndentApplicator {
+            -IHumanizerMiddleware
+        }
+    }
+
+    namespace PipelineIntegration {
+        class ConversionService {
+            +Task~ConversionResult?~ ConvertFileAsync(...)
+            -FailureOrchestrator _orchestrator
+            -HumanizerMiddleware _humanizer
+        }
+    }
+
+    namespace AppViewModels {
+        class MainViewModel {
+            +FailureLibraryCommand
+            +DiagnoseAndRetryCommand
+            +HumanReadableToggle
+        }
+        class FailureLibraryViewModel {
+            +ObservableCollection~FailureRecord~ Records
+            +FilterCommand
+            +ExportCsvCommand
+            +ClearCommand
+        }
+    }
+
+    %% Relationships
+    ConversionResult --> FailureContext : optional
+    FailureRecord --> FailureCategory
+    IFailureRepository <|.. JsonFailureRepository
+    IFailureDiagnoser <|.. RuleBasedFailureDiagnoser
+    FailureOrchestrator --> IFailureDiagnoser
+    FailureOrchestrator --> RetryOrchestrator
+    FailureOrchestrator --> IFailureRepository
+    RetryOrchestrator --> IRetryStrategy : resolves
+    IRetryStrategy <|.. SkipAndMarkStrategy
+    IRetryStrategy <|.. InstallDependencyStrategy
+    IRetryStrategy <|.. OcrFallbackStrategy
+    IRetryStrategy <|.. DowngradeConcurrencyStrategy
+    IRetryStrategy <|.. RetryOnceStrategy
+    IRetryStrategy <|.. UnlockAndRetryStrategy
+    FileItem --> FailureCategory : tagged
+
+    ConversionService --> FailureOrchestrator : on catch
+    ConversionService --> HumanizerMiddleware : post-process
+
+    HumanizerMiddleware --> IHumanizerMiddleware : chains
+    HeadingNormalizer ..|> IHumanizerMiddleware
+    ParagraphSpacer ..|> IHumanizerMiddleware
+    TableOptimizer ..|> IHumanizerMiddleware
+    ListNormalizer ..|> IHumanizerMiddleware
+    TocGenerator ..|> IHumanizerMiddleware
+    MetadataHighlighter ..|> IHumanizerMiddleware
+    ImagePlaceholderInserter ..|> IHumanizerMiddleware
+    IndentApplicator ..|> IHumanizerMiddleware
+
+    MainViewModel --> FailureLibraryViewModel : opens
+    MainViewModel --> FailureOrchestrator : invokes retry
+    FailureLibraryViewModel --> IFailureRepository : queries

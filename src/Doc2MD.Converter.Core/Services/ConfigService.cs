@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text.Json;
 using Doc2MD.Models;
 
@@ -105,6 +105,25 @@ public class ConfigService
         config.Recent.RecentFolders ??= new List<string>();
         config.Recent.RecentOutputDirectories ??= new List<string>();
         config.Recent.RecentConversions ??= new List<ConversionRecord>();
+
+        // 双向同步 Templates 设置与 Preview 模板路径
+        if (!string.IsNullOrWhiteSpace(config.Templates.OfficialDocTemplate) && string.IsNullOrWhiteSpace(config.Preview.FormatDoc.TemplatePath))
+        {
+            config.Preview.FormatDoc.TemplatePath = config.Templates.OfficialDocTemplate;
+        }
+        else if (!string.IsNullOrWhiteSpace(config.Preview.FormatDoc.TemplatePath) && string.IsNullOrWhiteSpace(config.Templates.OfficialDocTemplate))
+        {
+            config.Templates.OfficialDocTemplate = config.Preview.FormatDoc.TemplatePath;
+        }
+
+        if (!string.IsNullOrWhiteSpace(config.Templates.DefaultDocxTemplate) && string.IsNullOrWhiteSpace(config.Preview.MarkdownToDocx.TemplatePath))
+        {
+            config.Preview.MarkdownToDocx.TemplatePath = config.Templates.DefaultDocxTemplate;
+        }
+        else if (!string.IsNullOrWhiteSpace(config.Preview.MarkdownToDocx.TemplatePath) && string.IsNullOrWhiteSpace(config.Templates.DefaultDocxTemplate))
+        {
+            config.Templates.DefaultDocxTemplate = config.Preview.MarkdownToDocx.TemplatePath;
+        }
 
         if (config.Conversion.MaxConcurrentTasks < 1)
         {
