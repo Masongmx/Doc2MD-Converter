@@ -1,198 +1,163 @@
-﻿
 <div align="center">
 
 # Doc2MD Converter
 
-**Offline document conversion & Chinese official-document formatting for Windows**
+**Offline Document Conversion & GB/T 9704-2012 Chinese Official Document Typography Engine for Windows**
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)
-![.NET](https://img.shields.io/badge/.NET-8-512BD4)
-![Language](https://img.shields.io/badge/language-Chinese%20%7C%20English-brightgreen)
-![Offline](https://img.shields.io/badge/offline-100%25%20local-orange)
+[![Release](https://img.shields.io/badge/release-v1.1.0-blue.svg)](https://github.com/Masongmx/Doc2MD-Converter/releases)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](../LICENSE)
+[![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)](https://dotnet.microsoft.com/)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(x64)-0078D6)](https://github.com/Masongmx/Doc2MD-Converter)
+[![Offline](https://img.shields.io/badge/privacy-100%25%20Local%20Offline-success)](../SECURITY.md)
+[![Tests](https://img.shields.io/badge/tests-355%20passed-brightgreen)](../tests/)
 
-[中文](../README.md) · [Changelog](../CHANGELOG.md)
+[中文](../README.md) · [Changelog](../CHANGELOG.md) · [Contributing Guide](../CONTRIBUTING.md) · [Security Policy](../SECURITY.md)
 
 </div>
 
-Batch document input → format conversion / official-document typesetting → output to a target directory. Built for government & enterprise office scenarios, with the GB/T 9704-2012 official document standard built in. Supports Chinese and English UI. All processing happens locally — **your documents never leave your machine**.
+---
 
-![Main window](screenshots/main-window.png)
+## 🌟 Key Highlights
 
-## Quick Start
+Doc2MD Converter is a high-performance local offline conversion and document typesetting tool tailored for enterprise, government, and RAG knowledge base workflows:
 
-**End users (no build needed):**
+- 🔒 **100% Local & Offline**: Zero telemetry, zero cloud API dependencies, documents never leave your machine — fully air-gap network and confidential data ready.
+- 🤖 **Dual-Track AI & Human Readability**:
+  - **For AI/RAG**: Generates clean YAML Frontmatter, structured headings, and preserves tables/images for seamless LLM & vector search ingestion;
+  - **For Humans**: Built-in **Humanizer Pipeline** automatically generates TOC with anchor links, fixes skipped heading levels, aligns tables, formats nested lists, and highlights official document metadata.
+- 🏛️ **National Standard Document Formatting**: Strictly adheres to **GB/T 9704-2012** (Chinese Party & Government Official Document Standards), supporting custom Word template style injection.
+- 🛡️ **Failure Root-Cause Diagnosis Subsystem**: Intelligently classifies **8 categories of errors** (process lock, encryption, missing dependencies, OOM, corrupted files, etc.) with actionable advice, Windows user path sanitization, and local persistence.
+- 🧹 **Deep AIGC Watermark Scrubbing**: Automatically detects and strips 6 types of AI tracking watermarks, metadata blocks, and invisible zero-width characters.
 
-1. Download a package from [Releases](../../releases):
-   - **Full installer (recommended)**: `Doc2MD-Converter-1.0.0-Setup.exe` (~535MB, all engines built-in, install and everything works)
-   - **Slim version**: `Doc2MD.Converter.exe` (~174MB, portable single file, covers 80% of daily scenarios)
-2. Installer: run the wizard (Next → Install → Finish); Slim: just double-click to run
-3. Drag documents into the window (or click "Add Files / Add Folder")
-4. Choose the output directory, click "Generate", and find the results in the output directory
+---
 
-**Developers:** see [Build & Run](#build--run) below.
+## 🖥️ Screenshot
 
-## Features
+![Main Window](screenshots/main-window.png)
 
-### 1. Documents to Markdown
+---
 
-Batch-convert the following formats to Markdown:
+## 🚀 Quick Start
 
-| Format | Notes |
-|--------|-------|
-| PDF | Direct parsing for text-based PDFs; optional OCR for scanned PDFs |
-| DOC / DOCX | Word documents (legacy `.doc` via LibreOffice / COM dual fallback) |
-| XLS / XLSX | Excel spreadsheets, table structure preserved |
-| PPT / PPTX | Presentation text extraction |
-| TXT / Markdown | Copied as-is |
+### Option 1: Direct Download (No build tools required)
 
-- Preserves headings, tables, lists, blockquotes, code blocks
-- Extracts document metadata (document number, issuing authority, date, document type, topic keywords)
-- Automatically strips AIGC watermarks (6 categories: frontmatter blocks, zero-width characters, etc.)
-- Quality scoring with import recommendations (`recommended` / `review` / `skip`)
+Visit [GitHub Releases](https://github.com/Masongmx/Doc2MD-Converter/releases) to download:
 
-### 2. Markdown to Official DOCX
+| Package Type | Filename | Best For | Description |
+| :--- | :--- | :--- | :--- |
+| **Portable Green Zip (Recommended)** | [`Doc2MD-Converter-v1.1.0-win-x64.zip`](https://github.com/Masongmx/Doc2MD-Converter/releases/latest) | Plug & Play / USB drive | Self-contained single executable with .NET 8 runtime included |
+| **Standalone Executable** | `Doc2MD.Converter.exe` | Quick desktop launch | Portable win-x64 executable, double-click to run |
+| **Full Installer** | `Doc2MD-Converter-1.0.0-Setup.exe` | Full offline bundle | Includes LibreOffice portable & OCR engines |
 
-- Compliant with GB/T 9704-2012 (official document format standard for Party and government organs)
-- Built-in templates: Official Report, Meeting Minutes
-- Custom Word template support (clones template styles and section settings)
-- Table of contents generation, header/footer support, Chinese typography (方正小标宋简体 / 黑体 / 仿宋_GB2312 / 楷体_GB2312)
+### Option 2: Build from Source
 
-### 3. One-Click Formatting of DOCX
+```powershell
+# 1. Clone the repository
+git clone https://github.com/Masongmx/Doc2MD-Converter.git
+cd Doc2MD-Converter
 
-- Automatically normalizes fonts, sizes, line spacing, page margins, first-line indent per GB/T 9704-2012
-- Three built-in formatting profiles: Standard Official, Enterprise Enhanced, Academic Paper
-- Profile import/export support
+# 2. Build the solution
+dotnet build Doc2MD.Converter.slnx -c Release
 
-## Example
+# 3. Run all unit & scenario tests (355 tests)
+dotnet test Doc2MD.Converter.slnx -c Release --no-build
 
-Drag in a PDF / Word document with "Documents to Markdown" mode:
-
-```text
-Input:  meeting-notes.docx (headings, table, list)
-        │
-        ▼
-Output: meeting-notes.md
-
-# Meeting Notes
-
-## Time
-2026-08-12 09:30
-
-| Topic              | Result |
-|--------------------|--------|
-| H1 business review | Approved |
-
-- Project A: on schedule
-- Project B: needs coordination
+# 4. Run the desktop app
+dotnet run --project src/Doc2MD.Converter.App
 ```
 
-"Markdown to Official DOCX" applies the GB/T 9704-2012 layout automatically — one click to a print-ready official document.
+---
 
-## UI & Interaction
+## 📊 Feature Comparison
 
-- Three-mode card switching (To Markdown / To DOCX / Formatting)
-- Drag-and-drop file/folder import, batch processing with live progress
-- Conversion preview panel (semantic Markdown rendering)
-- Conversion history (last 20 records)
-- Keyboard shortcuts: `Ctrl+O` add files, `Ctrl+Shift+O` add folder, `F5` refresh, `Ctrl+Enter` start, `Esc` cancel, `Ctrl+Z` undo clear
-- First-run onboarding guide
-- Chinese / English UI switch (in Settings)
+| Dimension | Doc2MD Converter | Generic Pandoc | Python Scripts | Cloud Converters |
+| :--- | :---: | :---: | :---: | :---: |
+| **Privacy & Security** | **100% Local & Offline** | Local offline | Local offline | ❌ Server upload |
+| **GB/T 9704-2012 Standards** | **Native built-in + Template injection** | ❌ Manual styling needed | ❌ None | ❌ Costly customization |
+| **Humanizer Pipeline** | **TOC / Alignment / Highlighting** | ❌ Source dependent | ❌ Raw text only | ❌ |
+| **Failure Diagnosis & Sanitization** | **8 categories + Path anonymization** | ❌ Raw error codes | ❌ Unhandled exceptions | ❌ Vague errors |
+| **AIGC Watermark Stripping** | **6 deep scrubbing patterns** | ❌ None | ❌ None | ❌ None |
+| **Multi-Thread Concurrency** | **Context-isolated thread-safety** | Process isolated | Script-dependent | Token/concurrency metered |
+| **Deployment Ease** | **Single file, no dependencies** | Complex environment | Python/pip setup required | API key required |
 
-## Architecture
+---
+
+## 🛠️ Three Work Modes
+
+```mermaid
+flowchart TD
+    A[Input Files / Folders] --> ModeSelect{Select Work Mode}
+    
+    subgraph Mode1 [1. Documents to Markdown (ToMarkdown)]
+        M1_In[Word / PDF / Excel / PPT / TXT] --> M1_Parse[Parsers & OCR]
+        M1_Parse --> M1_Post[Post-processing: AIGC Scrubbing & Metadata]
+        M1_Post --> M1_Human[Humanizer Pipeline: TOC / Headings / Tables]
+        M1_Human --> M1_Out[Output GFM Markdown & Metadata Package]
+    end
+    
+    subgraph Mode2 [2. Markdown to Official DOCX (MarkdownToDocx)]
+        M2_In[Markdown File] --> M2_Pipeline[Semantic Parsing & Template Pipeline]
+        M2_Pipeline --> M2_Check[Format Compliance Checker]
+        M2_Check --> M2_Out[Output GB/T 9704 Compliant DOCX]
+    end
+    
+    subgraph Mode3 [3. DOCX One-Click Typesetting (FormatDoc)]
+        M3_In[Unformatted Word Document] --> M3_Inject[Custom Template Style Merge]
+        M3_Inject --> M3_Format[Fonts/Sizes/Spacing/Margin Normalization]
+        M3_Format --> M3_Out[Output Typeset DOCX]
+    end
+    
+    ModeSelect -->|Mode 1| Mode1
+    ModeSelect -->|Mode 2| Mode2
+    ModeSelect -->|Mode 3| Mode3
+    
+    M1_Parse -.->|Exception| FailureSubsystem[Failure Diagnosis & Retry Subsystem]
+```
+
+---
+
+## 🏗️ Architecture & Project Layout
 
 ```
 Doc2MD.Converter.slnx
-├── src/Doc2MD.Converter.Core/    # Core engine (.NET 8, no UI dependency)
-│   ├── Parsers/                  # Format parsers (PDF/Word/Excel/PPT/Text)
-│   ├── Pipeline/                 # Semantic Markdown→DOCX rendering pipeline
-│   ├── Services/                 # Conversion, formatting, OCR, security policy, update check
-│   └── Models/                   # Config, result, metadata models
-├── src/Doc2MD.Converter.App/     # WPF desktop app (.NET 8 / Windows)
-│   ├── ViewModels/               # MVVM view models
-│   ├── Resources/                # i18n strings (Strings.resx / Strings.en.resx)
-│   └── Controls/                 # Custom controls (mode cards, etc.)
-├── tests/                        # Unit & E2E tests (xUnit, 295+ cases)
-│   └── fixtures/                 # Sanitized test samples
-└── scripts/                      # Build / publish / smoke-test scripts
+├── src/
+│   ├── Doc2MD.Converter.Core/      # Pure .NET 8 BCL Core Engine (No UI dependencies)
+│   │   ├── Failures/               # Root cause diagnoser, path sanitizer, retry orchestrator
+│   │   ├── Humanizer/              # Readability pipeline (TOC/Headings/Tables/Lists/Highlights)
+│   │   ├── Parsers/                # Parsers (PDF/Word/Excel/PPT/Text)
+│   │   ├── Pipeline/               # Markdown -> DOCX semantic rendering & checker
+│   │   ├── Services/               # Conversion service, metadata extractor, AIGC filter
+│   │   └── Models/                 # Shared domain models
+│   └── Doc2MD.Converter.App/       # WPF Modern Desktop Client (.NET 8 Windows x64)
+│       ├── ViewModels/             # MVVM ViewModels
+│       ├── Controls/               # Custom controls (ModeCard, etc.)
+│       └── Resources/              # Localization dictionaries
+└── tests/
+    ├── Doc2MD.Converter.Core.Tests/# Core engine tests (325 tests)
+    └── Doc2MD.Converter.App.Tests/ # UI ViewModel & scanner tests (30 tests)
 ```
 
-Processing flow:
+---
 
-```mermaid
-flowchart LR
-    A[Input document] --> B{Pick a mode}
-    B -->|To Markdown| C[Parse / OCR extract]
-    B -->|To Official| D[Semantic rendering pipeline]
-    B -->|Formatting| E[GB/T 9704 normalize]
-    C --> F[Output .md]
-    D --> G[Output official .docx]
-    E --> H[Output formatted .docx]
-```
+## ⌨️ Keyboard Shortcuts
 
-## Requirements
+| Shortcut | Action | Description |
+| :--- | :--- | :--- |
+| <kbd>Ctrl</kbd> + <kbd>O</kbd> | Add Files | Open file picker dialog |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>O</kbd> | Add Folder | Import an entire folder recursively |
+| <kbd>Ctrl</kbd> + <kbd>Enter</kbd> | Start | Trigger batch conversion or formatting |
+| <kbd>Esc</kbd> | Cancel | Gracefully abort active processing |
+| <kbd>Ctrl</kbd> + <kbd>Z</kbd> | Undo Clear | Restore cleared file list within 3-second window |
+| <kbd>F5</kbd> | Refresh | Re-scan working directory for changes |
 
-- Windows 10 / 11 (x64)
-- .NET 8 SDK (to build); self-contained publishing available (no .NET runtime needed to run)
+---
 
-Optional external tools (with clear hints when missing; core flow unaffected):
+## 🤝 Contributing
 
-| Tool | Purpose |
-|------|---------|
-| LibreOffice | Legacy binary Office formats (.doc / .xls / .ppt) |
-| OCRmyPDF + Tesseract (chi_sim) | OCR for scanned PDFs |
+We welcome community contributions! Please read our [Contributing Guide](../CONTRIBUTING.md) for details on code style, testing, and the pull request process.
 
-**Deployment strategy**:
+---
 
-| Tier | Description | Size |
-|------|-------------|------|
-| **Full installer** (recommended) | All engines built-in (LibreOffice / OCRmyPDF / Tesseract), everything works | ~535MB |
-| **Slim** | Single portable exe; covers 80% of daily scenarios (legacy formats/OCR need manual dependency install) | ~174MB |
+## 📄 License
 
-See [Deployment Guide](../docs/内网离线部署指南.md) for details.
-
-## Build & Run
-
-```powershell
-# Build
-dotnet build Doc2MD.Converter.slnx
-
-# Run tests
-dotnet test tests/Doc2MD.Converter.Core.Tests/Doc2MD.Converter.Core.Tests.csproj
-
-# Run the GUI
-dotnet run --project src/Doc2MD.Converter.App
-
-# Publish a self-contained single file (win-x64)
-.\scripts\publish-win-x64.ps1
-```
-
-Publish output goes to `publish/gui/`; copy templates to `publish/templates/` as needed.
-
-## Security & Privacy
-
-- **Fully offline** by default — no network calls, no document upload
-- External tools (OCR, LibreOffice) invoked only from local paths
-- Built-in security policy: path isolation, overwrite protection, file type & size limits, Windows reserved-name sanitization
-- Optional update check: only queries the GitHub Releases API; never auto-downloads, asks the user before opening the download page
-
-## Links
-
-- [中文 README](../README.md)
-- [Changelog](../CHANGELOG.md)
-- [Releases](../../releases)
-
-## Contributing
-
-1. Fork and clone this repository
-2. Install the .NET 8 SDK
-3. Run `dotnet build` to verify the build
-4. Write/modify code and add unit tests
-5. Run `dotnet test` to make sure all cases pass
-6. Submit a Pull Request (describe the change category and rationale in the commit message)
-
-## License
-
-MIT License — see [LICENSE](../LICENSE).
-
-> AI生成
+This project is open-sourced under the [MIT License](../LICENSE).

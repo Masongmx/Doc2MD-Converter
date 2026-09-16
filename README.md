@@ -1,200 +1,192 @@
-
 <div align="center">
 
 # Doc2MD Converter
 
-**Windows 离线文档转换与中文公文排版工具**
+**Windows 离线全能文档转换器与 GB/T 9704-2012 中文公文排版引擎**
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![.NET CI](https://github.com/Masongmx/Doc2MD-Converter/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/Masongmx/Doc2MD-Converter/actions/workflows/dotnet-ci.yml)
-![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)
-![.NET](https://img.shields.io/badge/.NET-8-512BD4)
-![Language](https://img.shields.io/badge/language-中文%20%7C%20English-brightgreen)
-![Offline](https://img.shields.io/badge/offline-100%25%20local-orange)
+[![Release](https://img.shields.io/badge/release-v1.1.0-blue.svg)](https://github.com/Masongmx/Doc2MD-Converter/releases)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)](https://dotnet.microsoft.com/)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(x64)-0078D6)](https://github.com/Masongmx/Doc2MD-Converter)
+[![Offline](https://img.shields.io/badge/privacy-100%25%20Local%20Offline-success)](SECURITY.md)
+[![Tests](https://img.shields.io/badge/tests-355%20passed-brightgreen)](tests/)
 
-[English](docs/README.en.md) · [更新日志](CHANGELOG.md)
+[English](docs/README.en.md) · [更新日志](CHANGELOG.md) · [贡献指南](CONTRIBUTING.md) · [安全政策](SECURITY.md) · [离线部署指南](docs/内网离线部署指南.md)
 
 </div>
 
-批量文档输入 → 格式转换 / 公文排版 → 输出到指定目录。面向政企办公场景，内置 GB/T 9704-2012 公文格式标准，支持中英文界面。所有处理均在本地完成，**文档内容绝不上传**。
+---
 
-![主界面](docs/screenshots/main-window.png)
+## 🌟 核心亮点
 
-## 快速开始
+Doc2MD Converter 是一款面向政企办公、知识库构建（RAG）和日常文档处理的高性能本地离线转换与排版工具：
 
-**最终用户（无需编译）：**
+- 🔒 **100% 本地纯离线运行**：零遥测、零云端 API 依赖、文档内容绝不上传，符合涉密与内网安全要求。
+- 🤖 **AI 与人类双轨可读设计 (Dual-Track)**：
+  - **AI 侧**：输出规范的 YAML Frontmatter、结构化标题、保留完整表格与图片元数据，直通大模型与向量数据库；
+  - **人类侧**：内置 **Humanizer 中间件管线**，智能生成 TOC 目录、修复跳级标题、对齐表格、规整多层嵌套列表、高亮公文关键要素。
+- 🏛️ **国家公文标准排版**：严格遵循 **GB/T 9704-2012《党政机关公文格式》** 标准，支持自定义 Word 模板样式注入与双向同步。
+- 🛡️ **生产级失败根因诊断机制**：针对文档占用锁、密码加密、引擎缺失、格式损坏等 **8 大类故障**精准识别并给出人类行动建议，配合 Windows 路径隐私脱敏与本地知识库持久化，彻底消除无效重复重试。
+- 🧹 **深度 AIGC 水印清洗**：自动检测并剥离 Frontmatter 标记、行内 AIGC 标识、零宽隐形字符等 6 类大模型生成水印。
 
-1. 前往 [Releases](../../releases) 下载安装包：
-   - **一键安装版（推荐）**：Doc2MD-Converter-1.0.0-Setup.exe（约 535MB，内置全部引擎，双击安装即全功能可用）
-   - **精简版**：Doc2MD.Converter.exe（约 174MB，免安装单文件，覆盖日常 80% 场景）
-2. 安装版：运行安装向导（Next → Install → Finish）；精简版：直接双击运行
-3. 将待转换文档拖入窗口（或点击"添加文件 / 添加文件夹"）
-4. 选择输出目录，点击「生成」，在输出目录查看结果
+---
 
-**开发者：** 见下方 [构建与运行](#构建与运行)。
+## 🖥️ 软件界面
 
+![主界面截图](docs/screenshots/main-window.png)
 
-## 功能特性
+---
 
-### 1. 文档转 Markdown
+## 🚀 快速开始
 
-支持以下格式批量转换为 Markdown：
+### 方式 1：直接下载使用（无需安装环境）
 
-| 格式 | 说明 |
-|------|------|
-| PDF | 文本型直接解析；扫描型可选 OCR 增强 |
-| DOC / DOCX | Word 文档（旧式 .doc 通过 LibreOffice / COM 双降级转换） |
-| XLS / XLSX | Excel 表格，保留表格结构 |
-| PPT / PPTX | 演示文稿文本提取 |
-| TXT / Markdown | 直接复制 |
+前往 [GitHub Releases](https://github.com/Masongmx/Doc2MD-Converter/releases) 下载最新发行版：
 
-- 保留标题层级、表格、列表、引用、代码块等结构
-- 自动提取文档元数据（文号、发文机关、日期、公文类型、主题词）
-- 自动移除 AIGC 水印（frontmatter、零宽字符等 6 类）
-- 质量评分与导入建议（推荐 / 复核 / 跳过）
+| 发行形态 | 文件名 | 适用场景 | 说明 |
+| :--- | :--- | :--- | :--- |
+| **便携绿色版（推荐）** | [`Doc2MD-Converter-v1.1.0-win-x64.zip`](https://github.com/Masongmx/Doc2MD-Converter/releases/latest) | 即开即用 / U 盘随身携带 | 解压即用，内置 .NET 8 运行时，单文件执行 |
+| **独立可执行程序** | `Doc2MD.Converter.exe` | 桌面快速快捷启动 | 单文件 Self-Contained 架构，双击运行 |
+| **完整安装版** | `Doc2MD-Converter-1.0.0-Setup.exe` | 深度依赖集成 | 内置 LibreOffice 便携版与 OCR 引擎组件 |
 
-### 2. Markdown 转公文 DOCX
+### 方式 2：从源码编译与开发
 
-- 符合 GB/T 9704-2012《党政机关公文格式》标准
-- 内置两种模板：正式公文（official-report）、会议纪要（meeting-minutes）
-- 支持自定义 Word 模板（克隆模板样式与节设置）
-- 支持目录生成、页眉页脚、正文中文字体（方正小标宋简体 / 黑体 / 仿宋_GB2312 / 楷体_GB2312）
+```powershell
+# 1. 克隆仓库
+git clone https://github.com/Masongmx/Doc2MD-Converter.git
+cd Doc2MD-Converter
 
-> 💡 **字体合规提示**：国家公文标准推荐使用方正小标宋、仿宋_GB2312 等中文字体。若在未安装此类字体的系统上运行，Word 会自动回落至系统默认字体；商业使用特定商业字库请遵循字体厂商的授权政策，或在排版方案中指定思源宋体/思源黑体等开源字体。
+# 2. 编译解决方案
+dotnet build Doc2MD.Converter.slnx -c Release
 
-### 3. DOC / DOCX 一键规范排版
+# 3. 运行全量自动化测试（355 个测试用例）
+dotnet test Doc2MD.Converter.slnx -c Release --no-build
 
-- 按 GB/T 9704-2012 自动规范化字体、字号、行距、页边距、首行缩进
-- 内置三种排版方案：标准公文格式 / 企业增强版 / 学术论文格式
-- 支持排版方案导入导出
-
-## 使用示例
-
-以「文档转 Markdown」为例，拖入 PDF / Word 文档后一键输出：
-
-```text
-输入：会议纪要.docx（含标题、表格、列表）
-        │
-        ▼
-输出：会议纪要.md
-
-# 会议纪要
-
-## 会议时间
-2026-08-12 09:30
-
-| 议题 | 结论 |
-|------|------|
-| 上半年经营分析 | 通过 |
-
-- 项目A：按计划推进
-- 项目B：需协调资源
+# 4. 运行桌面程序
+dotnet run --project src/Doc2MD.Converter.App
 ```
 
-「Markdown 转公文 DOCX」则按 GB/T 9704-2012 自动套用公文版式，一键产出可直接打印的正式公文。
+---
 
-## 界面与交互
+## 📊 能力对比一览
 
-- 三模式卡片切换（文档转 Markdown / Markdown 转 DOCX / 一键排版）
-- 拖拽添加文件或文件夹，批量处理，实时进度
-- 转换预览面板（Markdown 语义渲染）
-- 转换历史记录（最近 20 条）
-- 快捷键：Ctrl+O 添加文件、Ctrl+Shift+O 添加文件夹、F5 刷新、Ctrl+Enter 开始、Esc 取消、Ctrl+Z 撤销清空
-- 首次启动引导教程
-- 中英文界面切换（设置中更改）
+| 特性维度 | Doc2MD Converter | 传统 Pandoc | 常见 Python 提取脚本 | 云端/商业转换器 |
+| :--- | :---: | :---: | :---: | :---: |
+| **运行隐私** | **100% 本地纯离线** | 本地离线 | 本地离线 | ❌ 上传服务器 |
+| **公文标准排版 (GB/T 9704)** | **原生内置 + 模板注入** | ❌ 需手工写样式 | ❌ 无 | ❌ 需昂贵定制 |
+| **双轨可读性增强 (Humanizer)** | **目录/对齐/高亮全自动** | ❌ 依赖源格式 | ❌ 纯文本提取 | ❌ |
+| **失败根因自动诊断与脱敏** | **8 类精准识别 + 路径脱敏** | ❌ 仅输出错误码 | ❌ 异常中断 | ❌ 错误信息模糊 |
+| **AIGC 生成水印清洗** | **6 类深度剥离** | ❌ 无 | ❌ 无 | ❌ 无 |
+| **多线程并发安全性** | **方法级上下文隔离** | 进程隔离 | 取决于编写 | 依赖并发数计费 |
+| **部署便利度** | **单文件免装运行环境** | 需安装复杂环境 | 需配 Python 依赖 | 需注册 API Key |
 
-## 技术架构
+---
+
+## 🛠️ 三大核心工作模式
+
+```mermaid
+flowchart TD
+    A[输入文件/文件夹] --> ModeSelect{选择工作模式}
+    
+    subgraph Mode1 [1. 文档转 Markdown (ToMarkdown)]
+        M1_In[Word / PDF / Excel / PPT / TXT] --> M1_Parse[解析引擎提取]
+        M1_Parse --> M1_Post[后处理: AIGC 清洗 & 元数据提取]
+        M1_Post --> M1_Human[Humanizer 管线: TOC / 标题规范 / 表格规整]
+        M1_Human --> M1_Out[输出标准 GFM Markdown & 元数据包]
+    end
+    
+    subgraph Mode2 [2. Markdown 转公文 (MarkdownToDocx)]
+        M2_In[Markdown 文件] --> M2_Pipeline[语义解析 & 模板渲染管线]
+        M2_Pipeline --> M2_Check[公文格式符合度检查]
+        M2_Check --> M2_Out[输出符合 GB/T 9704 规范的 DOCX]
+    end
+    
+    subgraph Mode3 [3. DOCX 一键规范排版 (FormatDoc)]
+        M3_In[未排版 Word 文档] --> M3_Inject[自定义模板样式合并]
+        M3_Inject --> M3_Format[字体/字号/行距/边距规范化]
+        M3_Format --> M3_Out[输出已排版公文文档]
+    end
+    
+    ModeSelect -->|模式 1| Mode1
+    ModeSelect -->|模式 2| Mode2
+    ModeSelect -->|模式 3| Mode3
+    
+    M1_Parse -.->|发生异常| FailureSubsystem[失败诊断与重试子系统: 8大根因识别 + 路径脱敏 + 策略编排]
+```
+
+### 1. 文档转 Markdown (`ToMarkdown`)
+- 支持 **PDF**（文字型直解 / 扫描型 OCR 增强）、**Word**（`.docx` 原生 / 旧版 `.doc` 双重降级）、**Excel**（`.xlsx` / `.xls` 保留表头与数据网格）、**PPT**（`.pptx` / `.ppt`）与纯文本；
+- 自动提取公文六大要素：**标题、发文字号、发文机关、成文日期、文档类型、主题关键词**；
+- 质量评估系统：自动计算文档完整度、字数、表格数与图片资产，输出导入质量建议。
+
+### 2. Markdown 转公文 DOCX (`MarkdownToDocx`)
+- 严格按照《党政机关公文格式》自动排版为可直接打印下发的标准 `.docx`；
+- 支持内置模板（正式公文 `official-report`、会议纪要 `meeting-minutes`）与自定义模板导入；
+- 自动处理正文中文字体（小标宋 / 黑体 / 楷体 / 仿宋）、行距（固定 28.9pt）、字间距与版心边距。
+
+### 3. DOC / DOCX 一键规范排版 (`FormatDoc`)
+- 对现有杂乱的 Word 文档一键重构为国家公文标准版式；
+- 支持自定义 `.docx` / `.dotx` 模板的样式注入合并（不破坏文档原有逻辑）；
+- 自动规整页眉页脚、版记分隔线与奇偶页码。
+
+---
+
+## 🏗️ 架构与项目结构
 
 ```
 Doc2MD.Converter.slnx
-├── src/Doc2MD.Converter.Core/    # 核心引擎（.NET 8，无 UI 依赖）
-│   ├── Parsers/                  # 各格式解析器（PDF/Word/Excel/PPT/Text）
-│   ├── Pipeline/                 # Markdown→DOCX 语义化渲染管线
-│   ├── Services/                 # 转换、排版、OCR、安全策略、更新检查等
-│   └── Models/                   # 配置、结果、元数据模型
-├── src/Doc2MD.Converter.App/     # WPF 桌面应用（.NET 8 / Windows）
-│   ├── ViewModels/               # MVVM 视图模型
-│   ├── Resources/                # 中英文字符串资源（Strings.resx / Strings.en.resx）
-│   └── Controls/                 # 模式卡片等自定义控件
-├── tests/                        # 单元测试与 E2E 测试（xUnit，295+ 用例）
-│   └── fixtures/                 # 脱敏测试样例
-└── scripts/                      # 构建 / 发布 / 冒烟测试脚本
+├── src/
+│   ├── Doc2MD.Converter.Core/      # 纯 .NET 8 BCL 跨平台核心引擎（无 UI 依赖）
+│   │   ├── Failures/               # 失败案例诊断、路径脱敏、仓储与重试策略编排
+│   │   ├── Humanizer/              # 可读性优化管线 (TOC/跳级标题/表格/列表/公文高亮)
+│   │   ├── Parsers/                # 各格式解析器 (PDF/Word/Excel/PPT/Text)
+│   │   ├── Pipeline/               # Markdown -> DOCX 语义化渲染与合规检查
+│   │   ├── Services/               # 转换主服务、公文元数据提取、AIGC 过滤、更新检查
+│   │   └── Models/                 # 统一领域模型 (AppConfig / ConversionResult 等)
+│   └── Doc2MD.Converter.App/       # WPF 现代化桌面客户端 (.NET 8 Windows x64)
+│       ├── ViewModels/             # MVVM 视图模型 (MainViewModel / FileScanService)
+│       ├── Controls/               # 模式卡片 (ModeCard) 等自定义组件
+│       └── Resources/              # 多语言字典 (Strings.resx / Strings.en.resx)
+└── tests/
+    ├── Doc2MD.Converter.Core.Tests/# 核心引擎测试 (325 个用例：解析、排版、失败诊断、Humanizer)
+    └── Doc2MD.Converter.App.Tests/ # 界面视图模型与文件扫描测试 (30 个用例)
 ```
 
-处理流程：
+---
 
-```mermaid
-flowchart LR
-    A[输入文档] --> B{选择模式}
-    B -->|文档转 Markdown| C[解析/OCR 提取]
-    B -->|Markdown 转公文| D[语义化渲染管线]
-    B -->|一键排版| E[GB/T 9704 规范化]
-    C --> F[输出 .md]
-    D --> G[输出公文 .docx]
-    E --> H[输出规范化 .docx]
-```
+## ⌨️ 快捷键指南
 
-## 环境要求
+| 快捷键 | 功能 | 说明 |
+| :--- | :--- | :--- |
+| <kbd>Ctrl</kbd> + <kbd>O</kbd> | 添加文件 | 打开文件选择对话框 |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>O</kbd> | 添加文件夹 | 批量导入整个目录 |
+| <kbd>Ctrl</kbd> + <kbd>Enter</kbd> | 开始处理 | 立即触发转换/排版任务 |
+| <kbd>Esc</kbd> | 取消任务 | 优雅中止当前正在进行的批量处理 |
+| <kbd>Ctrl</kbd> + <kbd>Z</kbd> | 撤销清空 | 在 3 秒撤销窗口内快速恢复被清空的文件列表 |
+| <kbd>F5</kbd> | 刷新当前目录 | 重新扫描当前工作目录文件变更 |
 
-- Windows 10 / 11（64 位）
-- .NET 8 SDK（构建时）；运行时支持自包含发布（免安装 .NET）
+---
 
-可选外部工具（缺失时给出清晰提示，不影响主流程）：
+## ⚖️ 字体与合规说明
 
-| 工具 | 用途 |
-|------|------|
-| LibreOffice | 旧式 .doc / .xls / .ppt 二进制 Office 格式转换 |
-| OCRmyPDF + Tesseract (chi_sim) | 扫描型 PDF 的 OCR 识别 |
+> [!NOTE]
+> GB/T 9704-2012 国家公文标准推荐使用**方正小标宋简体**、**仿宋_GB2312**、**楷体_GB2312** 与 **黑体**。若在未预装此类商业字库的系统上运行，Word 会自动回落至系统内置字体。如用于商业环境，建议遵循字体厂商授权政策，或在排版方案中指定开源的**思源宋体 (Source Han Serif)** 与 **思源黑体 (Source Han Sans)**。
 
-**部署策略**：
+---
 
-| 形态 | 说明 | 体积 |
-|------|------|------|
-| **一键安装版**（推荐） | 安装包内置 LibreOffice / OCRmyPDF / Tesseract，功能全开 | 约 535MB |
-| **精简版** | 单 exe 免安装，覆盖日常 80% 场景（旧格式/OCR 需手动装依赖） | 约 174MB |
+## 🤝 参与贡献
 
-选择与安装步骤见 [部署指南](docs/内网离线部署指南.md)。
+我们非常欢迎社区贡献！在提交代码前，请参阅 [CONTRIBUTING.md](CONTRIBUTING.md) 了解详细流程与规范。
 
-## 构建与运行
+1. **Fork** 本仓库；
+2. 新建功能分支 (`git checkout -b feat/my-cool-feature`)；
+3. 编写代码并补充自动化测试（确保 `dotnet test` 100% 绿灯）；
+4. 提交更改 (`git commit -m 'feat: add some amazing feature'`)；
+5. 推送至分支 (`git push origin feat/my-cool-feature`)；
+6. 发起 **Pull Request**。
 
-```powershell
-# 构建
-dotnet build Doc2MD.Converter.slnx
+---
 
-# 运行测试
-dotnet test tests/Doc2MD.Converter.Core.Tests/Doc2MD.Converter.Core.Tests.csproj
+## 📄 开源许可证
 
-# 运行 GUI
-dotnet run --project src/Doc2MD.Converter.App
-
-# 发布自包含单文件（win-x64）
-.\scripts\publish-win-x64.ps1
-```
-
-发布产物位于 `publish/gui/`，模板按需复制至 `publish/templates/`。
-
-## 安全与隐私
-
-- **完全离线**：默认不联网，文档内容不上传
-- OCR、LibreOffice 等外部工具仅从本地路径调用
-- 内置安全策略：路径隔离、覆盖保护、文件类型与大小限制、Windows 保留名净化
-- 可选的自动更新检查：仅轮询 GitHub Releases 接口，不自动下载安装，由用户确认跳转下载页
-
-## 相关链接
-
-- [English README](docs/README.en.md)
-- [更新日志 (CHANGELOG)](CHANGELOG.md)
-- [Releases](../../releases)
-
-## 从源码开始贡献
-
-1. Fork 本仓库并克隆到本地
-2. 安装 .NET 8 SDK
-3. 运行 `dotnet build` 确认构建通过
-4. 编写/修改代码，补充相应单元测试
-5. 运行 `dotnet test` 确保全部用例通过
-6. 提交 Pull Request（请在提交信息中注明改动类别与原因）
-
-## 许可证
-
-MIT License，见 [LICENSE](LICENSE)。
+本项目基于 [MIT License](LICENSE) 开源发布。
